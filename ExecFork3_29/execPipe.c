@@ -3,8 +3,6 @@
 #include<stdio.h>
 #include<string.h>
 #include<sys/types.h>
-#include<sys/ipc.h>
-//#include<msg.h>
 #include<sys/stat.h>
 #include<fcntl.h>
 
@@ -17,16 +15,16 @@
 #define INPUT_PROCESS "inputProcess" //input process
 #define OUTPUT_PROCESS "outputProcess" //output process
 void makeFIFOPipe();
-void main_process(int fpIn, int fpOut);
-//void input_process(char* buf,int fpIn);
-//void output_process(char* buf,int fpOut);
+void main_process(char* buf,int fpIn, int fpOut);
+void input_process(char* buf,int fpIn);
+void output_process(char* buf,int fpOut);
 
 int main(void)
 {
 	int fpIn, fpOut;
 	pid_t pid;
 	int n, fd[2];
-//	char buf[255];
+	char buf[255];
 	char path[255];
 
 	makeFIFOPipe();
@@ -48,7 +46,7 @@ int main(void)
 			}
 			//main process(child2)
 		//		printf("%s\n",strcat("./",OUTPUT_PROCESS));	
-			main_process(fpIn, fpOut);
+			main_process(buf,fpIn, fpOut);
 		}
 		else{
 			//output process(parents)
@@ -99,12 +97,9 @@ void makeFIFOPipe()
 
 }
 
-void main_process(int fpIn, int fpOut)
+void main_process(char* buf, int fpIn, int fpOut)
 {
 	int n;
-	int i;
- 	char buf[255];
-	char output[4]={1,2,3,4};
 	if((fpIn=open(PIPE_INPUT,O_RDONLY))<0)
 	{
 		perror("open error:");
@@ -116,27 +111,14 @@ void main_process(int fpIn, int fpOut)
 		perror("open error:");
 		exit(EXIT_FAILURE);
 	}
-	printf("main\n");
 	while(1)
 	{
 		memset(buf,0x00, 255);
 		n=read(fpIn,buf,255);
-//		fprintf(stderr, "main : ",buf);
-		
-		printf("main : ");
-		for(i=0;i<=9;i++)
-			printf("[%d] ",buf[i]);
-		printf("\n");
-
-		//
-			
-		memset(buf,0x00,255);
-		output[3]=(output[3]+1)%10;	
-		memcpy(buf,output,4);
-		write(fpOut,buf,255);
-		usleep(5000);
+		//		fprintf(stderr, "%s",buf);
+				
+		write(fpOut,buf,strlen(buf));
 	}
 
 
 }
-

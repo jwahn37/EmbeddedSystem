@@ -30,13 +30,13 @@ int main(void)
 //	char buf[255];
 
 	//input is from switch 
-/*
+
     if((fpIn=open(PIPE_INPUT,O_WRONLY))<0)
 	{
 		perror("open error:");
 		exit(EXIT_FAILURE);
 	}
-*/
+
 	clockMode(fpIn);
 		
 /*
@@ -78,6 +78,7 @@ void pushSwitch(int fpIn)
 	
 	unsigned char push_sw_buff[MAX_BUTTON];
 	char send_buf[255];
+	char chFlag=0;
 
 	//open device driver
 	dev = open("/dev/fpga_push_switch", O_RDWR);
@@ -96,16 +97,30 @@ void pushSwitch(int fpIn)
 	printf("Press <ctrl+c> to quit. \n");
 
 	while(!quit){
-		sleep(1);
+		usleep(400000);
 		memset(send_buf,0x00,255);
 		read(dev, &push_sw_buff, MAX_BUTTON);
+		
+
+		//first character is change flag
+		/*
+		if(strncmp(send_buf+sizeof(char), push_sw_buff, 9)!=0)//change value
+		{
+		//	if(send_buf[0]==0)	send_buf[0]=1;
+		//	else			send_buf[0]=0;
+			send_buf[0]=1;
+		}
+		*/
 		memcpy(send_buf, push_sw_buff, MAX_BUTTON);
 		
 		printf("input process : ");
-		for(i=0;i<MAX_BUTTON;i++)
+		for(i=0;i<=MAX_BUTTON;i++)
 			printf("[%d] ",send_buf[i]);
 		printf("\n");
+
 		
+		
+		//first character : variant flag
 		write(fpIn,send_buf,255);
 	}
 	
