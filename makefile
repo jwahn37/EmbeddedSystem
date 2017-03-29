@@ -13,7 +13,7 @@ PIPEO =$(EXECDIR)output_pipeLine
 SEND =adb push 
 BOPATH =/sdcard/20121604_1
 
-SRC = execPipe.c
+SRC = mainProcess.c
 CC = arm-none-linux-gnueabi-gcc -static  
 #CC = gcc
 CFLAGS = -g -c 
