@@ -98,7 +98,7 @@ DEVICE connectToRKDevice(DEVICE rkDevice)
 	memset(rkDevice.devicePath,0x00,255);
 	strcat(rkDevice.devicePath,"/dev/input/event0");
 
-	if((rkDevice.device = open (device, O_RDONLY)) == -1) {
+	if((rkDevice.device = open (rkDevice.devicePath, O_RDONLY)) == -1) {
 		printf ("%s is not a vaild device.n", device);
 	}
 
