@@ -20,17 +20,28 @@
 #define SW_DV 2	//msg was from this device
 #define RK_DV 1
 #define NO_DV 0 
+#define FND_DEV 3
 
 typedef struct {
 	char device;
-	char msgBuf[254];
+	char readKey[2];
+	char switchB[9];
+	char buf[243];
+//	char msgBuf[254];
 
 }MSG;
-
+typedef struct{
+//	char device;
+	char fnd[4];
+	char led;
+	char buf[250];
+}SEND_MSG;
 void makeFIFOPipe();
 void main_process(int fpIn, int fpOut);
 //void input_process(char* buf,int fpIn);
 //void output_process(char* buf,int fpOut);
+
+SEND_MSG sendMsg;
 
 int main(void)
 {
@@ -115,7 +126,7 @@ void main_process(int fpIn, int fpOut)
 	int n;
 	int i;
  	char buf[255];
-	char output[4]={1,2,3,4};
+	char output[5]={1,2,3,4,0};
 	MSG msg;
 	
 	if((fpIn=open(PIPE_INPUT,O_RDONLY))<0)
@@ -134,22 +145,24 @@ void main_process(int fpIn, int fpOut)
 	{
 //		memset(buf,0x00, 255);
 //		n=read(fpIn,buf,255);
-
+		
 		memset(&(msg.device),0x00,255);
 		n=read(fpIn,&(msg.device),255);	
 		
 		printf("main : ");
 		printf("from %d , ",msg.device);
 		for(i=0;i<9;i++)
-			printf("[%d] ",msg.msgBuf[i]);
+			printf("[%d] ",msg.switchB[i]);
 		printf("\n");
 
 		//
 			
 		memset(buf,0x00,255);
-		output[3]=(output[3]+1)%10;	
-		memcpy(buf,output,4);
-		write(fpOut,buf,255);
+		output[3]=(output[3]+1)%10;
+		output[4]=(output[4]+1)%8;
+//		buf[0]=FND_DEV;
+		memcpy(&(sendMsg.fnd[0]),output,5);
+		write(fpOut,&(sendMsg.fnd[0]),255);
 		usleep(5000);
 	}
 

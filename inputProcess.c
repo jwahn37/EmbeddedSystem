@@ -43,7 +43,9 @@ typedef struct{
 
 typedef struct{
 	char device;
-	char sendBuf[254];
+	char readKey[2]; //size is 2byte
+	char switchB[9]; //size is 9byte
+	char sendBuf[243];
 
 }SEND;
 
@@ -91,7 +93,7 @@ int main(void)
 		usleep(1000000);
 //		memset(buf,0x00,255);
 //		sprintf(buf, "Hello Main Process input process is %d\n",getpid());
- 	    
+ 	    	memset(&sendMsg,0x00,255);
 		pushSwitch(swDevice,fpIn);
 	//	printf("while in \n");
 		readKey(rkDevice,fpIn);
@@ -172,7 +174,9 @@ void readKey(DEVICE rkDevice, int fpIn)
 	//	memcpy(send_buf,&ev[0].code,sizeof(ev[0].code));
 		sendMsg.device=RK_DV;
 		memset(&(sendMsg.device),0x00,255);
-		memcpy((&(sendMsg.device)+sizeof(char)),&ev[0].code,sizeof(ev[0].code));
+//		memcpy((&(sendMsg.device)+sizeof(char)),&ev[0].code,sizeof(ev[0].code));
+		memcpy(sendMsg.readKey,&ev[0].code,sizeof(ev[0].code));
+
 	//	send to mainprocess	
 	//	write(fpIn,send_buf,255);
 		
@@ -276,13 +280,13 @@ void pushSwitch(DEVICE swDevice, int fpIn)
 		//memset(send_buf,0x00,255);
 		//memcpy(send_buf, push_sw_buff, MAX_BUTTON);
 		
-		memset(&(sendMsg.device),0x00,255);
+	//	memset(&(sendMsg.device),0x00,255);
 		sendMsg.device=SW_DV;
-		memcpy(&(sendMsg.device)+sizeof(char), push_sw_buff, MAX_BUTTON);
+		memcpy(sendMsg.switchB, push_sw_buff, MAX_BUTTON);
 		
 		printf("input process : ");
 		for(i=0;i<=MAX_BUTTON;i++)
-			printf("[%d] ",sendMsg.sendBuf[i]);
+			printf("[%d] ",sendMsg.switchB[i]);
 		printf("\n");
 
 		
