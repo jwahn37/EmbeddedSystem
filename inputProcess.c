@@ -88,7 +88,7 @@ int main(void)
 	//send_buf : first byte-> flag of input kind
 
 	while(1){	
-		usleep(400000);
+		usleep(1000000);
 //		memset(buf,0x00,255);
 //		sprintf(buf, "Hello Main Process input process is %d\n",getpid());
  	    
@@ -130,6 +130,8 @@ void readKey(DEVICE rkDevice, int fpIn)
 	struct input_event ev[RK_BUF];
 	int fd, rd, value, size = sizeof (struct input_event);
 	char name[256] = "Unknown";
+
+
 //	char send_buf[255];
 /*&
 	char* device = "/dev/input/event0";
@@ -147,7 +149,8 @@ void readKey(DEVICE rkDevice, int fpIn)
 	printf("readkey() %d rkDevicepath:%s \n",size,rkDevice.devicePath);
 	if ((rd = read (rkDevice.device, ev, size * RK_BUF)) < size)
 	{
-		printf("read()");  
+		printf("read()"); 
+		ev[0].value = KEY_RELEASE; 
 		//	return (0);     
 	}
 
@@ -157,7 +160,7 @@ void readKey(DEVICE rkDevice, int fpIn)
 		printf ("code%d\n", (ev[1].code));
 	}
 	if( value == KEY_RELEASE ) {
-		printf ("key release\n");
+		printf ("key release!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1\n");
 	} else 	if( value == KEY_PRESS ) {
 		printf ("key press\n");
 	
@@ -167,8 +170,8 @@ void readKey(DEVICE rkDevice, int fpIn)
 		
 	//	memset(send_buf,0x00,255);
 	//	memcpy(send_buf,&ev[0].code,sizeof(ev[0].code));
-		memset(&(sendMsg.device),0x00,255);
 		sendMsg.device=RK_DV;
+		memset(&(sendMsg.device),0x00,255);
 		memcpy((&(sendMsg.device)+sizeof(char)),&ev[0].code,sizeof(ev[0].code));
 	//	send to mainprocess	
 	//	write(fpIn,send_buf,255);

@@ -16,6 +16,17 @@
 
 #define INPUT_PROCESS "inputProcess" //input process
 #define OUTPUT_PROCESS "outputProcess" //output process
+
+#define SW_DV 2	//msg was from this device
+#define RK_DV 1
+#define NO_DV 0 
+
+typedef struct {
+	char device;
+	char msgBuf[254];
+
+}MSG;
+
 void makeFIFOPipe();
 void main_process(int fpIn, int fpOut);
 //void input_process(char* buf,int fpIn);
@@ -105,6 +116,8 @@ void main_process(int fpIn, int fpOut)
 	int i;
  	char buf[255];
 	char output[4]={1,2,3,4};
+	MSG msg;
+	
 	if((fpIn=open(PIPE_INPUT,O_RDONLY))<0)
 	{
 		perror("open error:");
@@ -119,13 +132,16 @@ void main_process(int fpIn, int fpOut)
 	printf("main\n");
 	while(1)
 	{
-		memset(buf,0x00, 255);
-		n=read(fpIn,buf,255);
-//		fprintf(stderr, "main : ",buf);
+//		memset(buf,0x00, 255);
+//		n=read(fpIn,buf,255);
+
+		memset(&(msg.device),0x00,255);
+		n=read(fpIn,&(msg.device),255);	
 		
 		printf("main : ");
-		for(i=0;i<=9;i++)
-			printf("[%d] ",buf[i]);
+		printf("from %d , ",msg.device);
+		for(i=0;i<9;i++)
+			printf("[%d] ",msg.msgBuf[i]);
 		printf("\n");
 
 		//
