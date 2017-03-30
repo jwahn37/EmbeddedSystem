@@ -1,7 +1,7 @@
 #include<dirent.h>
 #include<errno.h>
 #include<fcntl.h>
-//#include<linux/input.h>
+#include<linux/input.h>
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
@@ -99,7 +99,7 @@ DEVICE connectToRKDevice(DEVICE rkDevice)
 	strcat(rkDevice.devicePath,"/dev/input/event0");
 
 	if((rkDevice.device = open (rkDevice.devicePath, O_RDONLY)) == -1) {
-		printf ("%s is not a vaild device.n", device);
+		printf ("%s is not a vaild device.n", rkDevice.devicePath);
 	}
 
 }
