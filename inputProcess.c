@@ -1,7 +1,7 @@
 #include<dirent.h>
 #include<errno.h>
 #include<fcntl.h>
-#include<linux/input.h>
+//#include<linux/input.h>
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
@@ -69,6 +69,7 @@ int main(void)
 	}
 
 	rkDevice = connectToRKDevice(rkDevice);
+	swDevice = connectToSWDevice(swDevice);
 //	connectToDevice(swDevice);
 
 //	readKey(fpIn);
@@ -88,7 +89,7 @@ int main(void)
 		write(fpIn,send_buf,255);
 
 	}
-	
+	close(swDevice.device);
 	
 	return 0;
 }
@@ -191,6 +192,29 @@ void clockMode(int fpIn)
 	}
 */
 }
+
+DEVICE connectToSWDevice(DEVICE swDevice)
+{
+	int i;
+	char* a="hello";
+	memset(swDevice.devicePath,0x00,255);
+	memcpy(swDevice.devicePath,"/dev/fpga_push_switch",18);
+	printf("%s path \n ",swDevice.devicePath);
+	
+//	for(i=0;i<strlen(rkDevice.devicePath);i++)
+//		printf("%c", rkDevice.devicePath);
+//	printf("\n");
+
+	if((swDevice.device = open (swDevice.devicePath, O_RKWR)) == -1) {
+		printf("Device Open Error\n");
+		close(swDevice.device);
+	}
+	(void)signal(SIGINT, user_signal1);
+
+	return swDevice;
+
+}
+
 void pushSwitch(int fpIn)
 {
 	int dev;
@@ -202,24 +226,24 @@ void pushSwitch(int fpIn)
 	char chFlag=0;
 
 	//open device driver
-	dev = open("/dev/fpga_push_switch", O_RDWR);
+	//dev = open("/dev/fpga_push_switch", O_RDWR);
 
 	//device error
+/*
 	if(dev<0)		 
 	{
 		printf("Device Open Error\n");
 		close(dev);
 //		return -1;
 	}
-
-	(void)signal(SIGINT, user_signal1);
+*/
+//	(void)signal(SIGINT, user_signal1);
 	
 	buff_size = sizeof(push_sw_buff);
 	printf("Press <ctrl+c> to quit. \n");
 
-	while(!quit){
-		usleep(400000);
-		memset(send_buf,0x00,255);
+//	while(!quit){
+	//	usleep(400000);
 		read(dev, &push_sw_buff, MAX_BUTTON);
 		
 
@@ -232,6 +256,7 @@ void pushSwitch(int fpIn)
 			send_buf[0]=1;
 		}
 		*/
+		memset(send_buf,0x00,255);
 		memcpy(send_buf, push_sw_buff, MAX_BUTTON);
 		
 		printf("input process : ");
@@ -242,10 +267,10 @@ void pushSwitch(int fpIn)
 		
 		
 		//first character : variant flag
-		write(fpIn,send_buf,255);
-	}
+//		write(fpIn,send_buf,255);
+//	}
 	
-	close(dev);
+	//close(dev);
 	
 }
 
