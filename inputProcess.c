@@ -1,7 +1,7 @@
 #include<dirent.h>
 #include<errno.h>
 #include<fcntl.h>
-#include<linux/input.h>
+//#include<linux/input.h>
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
@@ -31,21 +31,34 @@
 #define VOL_UP 115
 #define VOL_DOWN 114
 
-void readKey(int fpIn);
+typedef struct{
+	int device;
+	char devicePath[255];
 
+
+}DEVICE;
+
+
+void readKey(DEVICE rkDevice, int fpIn);
 void clockMode(int fpIn);
 void pushSwitch(int fpIn);
 void user_signaml1(int sig);
 
+DEVICE connectToRKDevice(DEVICE rkDevice);
+DEVICE connectToSWDevice(DEVICE swDevice);
 
 unsigned char quit = 0;
+int fpIn;
+char send_buf[255];
+
+
 
 int main(void)
 {
-	int fpIn;
+	
 	pid_t pid;
 	int n, fd[2];
-//	char buf[255];
+	DEVICE rkDevice, swDevice;	
 
 	//input is from switch 
 
@@ -54,71 +67,98 @@ int main(void)
 		perror("open error:");
 		exit(EXIT_FAILURE);
 	}
-	readKey(fpIn);
+
+	connectToRKDevice(rkDevice);
+//	connectToDevice(swDevice);
+
+//	readKey(fpIn);
 //	clockMode(fpIn);
 		
-/*
+	//send_buf : first byte-> flag of input kind
+
 	while(1){	
-		memset(buf,0x00,255);
+		usleep(400000);
+//		memset(buf,0x00,255);
 //		sprintf(buf, "Hello Main Process input process is %d\n",getpid());
-		write(fpIn,buf,strlen(buf));
-		sleep(1);
+ 	    
+	//	clockMode(fpIn);
+		readKey(rkDevice,fpIn);
+
+		write(fpIn,send_buf,255);
+
 	}
-*/	
+	
 	
 	return 0;
 }
 
-void readKey(int fpIn)
+DEVICE connectToRKDevice(DEVICE rkDevice)
+{
+
+	memset(rkDevice.devicePath,0x00,255);
+	strcat(rkDevice.devicePath,"/dev/input/event0");
+
+	if((rkDevice.device = open (device, O_RDONLY)) == -1) {
+		printf ("%s is not a vaild device.n", device);
+	}
+
+}
+
+void readKey(DEVICE rkDevice, int fpIn)
 {
 
 	struct input_event ev[RK_BUF];
 	int fd, rd, value, size = sizeof (struct input_event);
 	char name[256] = "Unknown";
-	char send_buf[255];
-
+//	char send_buf[255];
+/*&
 	char* device = "/dev/input/event0";
 	if((fd = open (device, O_RDONLY)) == -1) {
 		printf ("%s is not a vaild device.n", device);
 	}
+*/
 	// ioctl (fd, EVIOCGNAME (sizeof (name)), name);
 	// printf ("Reading From : %s (%s)n", device, name);
-
+/*
 	while (1){
 		usleep(400000);
-		memset(send_buf,0x00,255);
+*/
+		
 
-		if ((rd = read (fd, ev, size * RK_BUF)) < size)
-		{
-			printf("read()");  
+	if ((rd = read (fd, ev, size * RK_BUF)) < size)
+	{
+		printf("read()");  
 		//	return (0);     
-		}
+	}
 
-		value = ev[0].value;
+	value = ev[0].value;
 
-		if (value != ' ' && ev[1].value == 1 && ev[1].type == 1){ // Only read the key press event
-			printf ("code%d\n", (ev[1].code));
-		}
-		if( value == KEY_RELEASE ) {
-			printf ("key release\n");
-		} else 				if( value == KEY_PRESS ) {
-			printf ("key press\n");
-
+	if (value != ' ' && ev[1].value == 1 && ev[1].type == 1){ // Only read the key press event
+		printf ("code%d\n", (ev[1].code));
+	}
+	if( value == KEY_RELEASE ) {
+		printf ("key release\n");
+	} else 	if( value == KEY_PRESS ) {
+		printf ("key press\n");
+	
 
 		//ev[0].code size : 2byte
 		printf ("Type[%d] Value[%d] Code[%d], size:%d\n", ev[0].type, ev[0].value, (ev[0].code), sizeof(ev[0].code));
+		
+		memset(send_buf,0x00,255);
 		memcpy(send_buf,&ev[0].code,sizeof(ev[0].code));
-		//send to mainprocess	
-		write(fpIn,send_buf,255);
+	//	send to mainprocess	
+	//	write(fpIn,send_buf,255);
+		
 		}
 
 		//ev[0].code size : 2byte
 	//	printf ("Type[%d] Value[%d] Code[%d], size:%d\n", ev[0].type, ev[0].value, (ev[0].code), sizeof(ev[0].code));
-				
+//		memset(send_buf,0x00,255);			
 //		memcpy(send_buf,&ev[0].code,sizeof(ev[0].code));
 		//send to mainprocess	
 //		write(fpIn,send_buf,255);
-	}
+	
 
 
 }
