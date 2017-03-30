@@ -1,12 +1,18 @@
-#include<unistd.h>
+#include<dirent.h>
+#include<errno.h>
+#include<fcntl.h>
+#include<linux/input.h>
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
 #include<sys/types.h>
 #include<sys/stat.h>
+#include<sys/select.h>
+#include<sys/time.h>
 #include<sys/ioctl.h>
-#include<fcntl.h>
 #include<signal.h>
+#include<termios.h>
+#include<unistd.h>
 
 #define PIPE_READ 0
 #define PIPE_WRITE 1
@@ -16,9 +22,21 @@
 
 #define MAX_BUTTON 9
 
+#define RK_BUF 64
+#define KEY_RELEASE 0
+#define KEY_PRESS 1
+#define HOME 102
+#define BACK 158
+#define PROG 116
+#define VOL_UP 115
+#define VOL_DOWN 114
+
+void readKey(int fpIn);
+
 void clockMode(int fpIn);
 void pushSwitch(int fpIn);
 void user_signaml1(int sig);
+
 
 unsigned char quit = 0;
 
@@ -36,8 +54,8 @@ int main(void)
 		perror("open error:");
 		exit(EXIT_FAILURE);
 	}
-
-	clockMode(fpIn);
+	readKey(fpIn);
+//	clockMode(fpIn);
 		
 /*
 	while(1){	
@@ -50,6 +68,61 @@ int main(void)
 	
 	return 0;
 }
+
+void readKey(int fpIn)
+{
+
+	struct input_event ev[RK_BUF];
+	int fd, rd, value, size = sizeof (struct input_event);
+	char name[256] = "Unknown";
+	char send_buf[255];
+
+	char* device = "/dev/input/event0";
+	if((fd = open (device, O_RDONLY)) == -1) {
+		printf ("%s is not a vaild device.n", device);
+	}
+	// ioctl (fd, EVIOCGNAME (sizeof (name)), name);
+	// printf ("Reading From : %s (%s)n", device, name);
+
+	while (1){
+		usleep(400000);
+		memset(send_buf,0x00,255);
+
+		if ((rd = read (fd, ev, size * RK_BUF)) < size)
+		{
+			printf("read()");  
+		//	return (0);     
+		}
+
+		value = ev[0].value;
+
+		if (value != ' ' && ev[1].value == 1 && ev[1].type == 1){ // Only read the key press event
+			printf ("code%d\n", (ev[1].code));
+		}
+		if( value == KEY_RELEASE ) {
+			printf ("key release\n");
+		} else 				if( value == KEY_PRESS ) {
+			printf ("key press\n");
+
+
+		//ev[0].code size : 2byte
+		printf ("Type[%d] Value[%d] Code[%d], size:%d\n", ev[0].type, ev[0].value, (ev[0].code), sizeof(ev[0].code));
+		memcpy(send_buf,&ev[0].code,sizeof(ev[0].code));
+		//send to mainprocess	
+		write(fpIn,send_buf,255);
+		}
+
+		//ev[0].code size : 2byte
+	//	printf ("Type[%d] Value[%d] Code[%d], size:%d\n", ev[0].type, ev[0].value, (ev[0].code), sizeof(ev[0].code));
+				
+//		memcpy(send_buf,&ev[0].code,sizeof(ev[0].code));
+		//send to mainprocess	
+//		write(fpIn,send_buf,255);
+	}
+
+
+}
+
 
 void user_signal1(int sig)
 {
