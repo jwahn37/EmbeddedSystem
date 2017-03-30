@@ -31,12 +31,21 @@
 #define VOL_UP 115
 #define VOL_DOWN 114
 
+#define SW_DV 2
+#define RK_DV 1
+#define NO_DV 0
 typedef struct{
 	int device;
 	char devicePath[255];
 
 
 }DEVICE;
+
+typedef struct{
+	char device;
+	char sendBuf[254];
+
+}SEND;
 
 
 void readKey(DEVICE rkDevice, int fpIn);
@@ -47,9 +56,10 @@ void user_signaml1(int sig);
 DEVICE connectToRKDevice(DEVICE rkDevice);
 DEVICE connectToSWDevice(DEVICE swDevice);
 
+SEND sendMsg;
 unsigned char quit = 0;
 int fpIn;
-char send_buf[255];
+//char send_buf[255];
 
 
 
@@ -86,9 +96,9 @@ int main(void)
 	//	printf("while in \n");
 		readKey(rkDevice,fpIn);
 	//	send_buf[0]=1;
-		write(fpIn,send_buf,255);
+		write(fpIn,&sendMsg,255);
 //		write(fpIn,&rkDevice,255);
-
+		sendMsg.device=NO_DV;
 	}
 	close(swDevice.device);
 	
@@ -155,8 +165,11 @@ void readKey(DEVICE rkDevice, int fpIn)
 		//ev[0].code size : 2byte
 		printf ("Type[%d] Value[%d] Code[%d], size:%d\n", ev[0].type, ev[0].value, (ev[0].code), sizeof(ev[0].code));
 		
-		memset(send_buf,0x00,255);
-		memcpy(send_buf,&ev[0].code,sizeof(ev[0].code));
+	//	memset(send_buf,0x00,255);
+	//	memcpy(send_buf,&ev[0].code,sizeof(ev[0].code));
+		memset(&(sendMsg.device),0x00,255);
+		sendMsg.device=RK_DV;
+		memcpy((&(sendMsg.device)+sizeof(char)),&ev[0].code,sizeof(ev[0].code));
 	//	send to mainprocess	
 	//	write(fpIn,send_buf,255);
 		
@@ -257,12 +270,16 @@ void pushSwitch(DEVICE swDevice, int fpIn)
 			send_buf[0]=1;
 		}
 		*/
-		memset(send_buf,0x00,255);
-		memcpy(send_buf, push_sw_buff, MAX_BUTTON);
+		//memset(send_buf,0x00,255);
+		//memcpy(send_buf, push_sw_buff, MAX_BUTTON);
+		
+		memset(&(sendMsg.device),0x00,255);
+		sendMsg.device=SW_DV;
+		memcpy(&(sendMsg.device)+sizeof(char), push_sw_buff, MAX_BUTTON);
 		
 		printf("input process : ");
 		for(i=0;i<=MAX_BUTTON;i++)
-			printf("[%d] ",send_buf[i]);
+			printf("[%d] ",sendMsg.sendBuf[i]);
 		printf("\n");
 
 		
