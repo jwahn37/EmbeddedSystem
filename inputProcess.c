@@ -68,7 +68,7 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
-	connectToRKDevice(rkDevice);
+	rkDevice = connectToRKDevice(rkDevice);
 //	connectToDevice(swDevice);
 
 //	readKey(fpIn);
@@ -82,6 +82,7 @@ int main(void)
 //		sprintf(buf, "Hello Main Process input process is %d\n",getpid());
  	    
 	//	clockMode(fpIn);
+		printf("while in \n");
 		readKey(rkDevice,fpIn);
 
 		write(fpIn,send_buf,255);
@@ -94,13 +95,20 @@ int main(void)
 
 DEVICE connectToRKDevice(DEVICE rkDevice)
 {
-
+	int i;
+	char* a="hello";
 	memset(rkDevice.devicePath,0x00,255);
-	strcat(rkDevice.devicePath,"/dev/input/event0");
+	memcpy(rkDevice.devicePath,"/dev/input/event0",18);
+	printf("%s path \n ",rkDevice.devicePath);
+	
+//	for(i=0;i<strlen(rkDevice.devicePath);i++)
+//		printf("%c", rkDevice.devicePath);
+//	printf("\n");
 
 	if((rkDevice.device = open (rkDevice.devicePath, O_RDONLY)) == -1) {
 		printf ("%s is not a vaild device.n", rkDevice.devicePath);
 	}
+	return rkDevice;
 
 }
 
@@ -124,8 +132,8 @@ void readKey(DEVICE rkDevice, int fpIn)
 		usleep(400000);
 */
 		
-
-	if ((rd = read (fd, ev, size * RK_BUF)) < size)
+	printf("readkey() %d rkDevicepath:%s \n",size,rkDevice.devicePath);
+	if ((rd = read (rkDevice.device, ev, size * RK_BUF)) < size)
 	{
 		printf("read()");  
 		//	return (0);     
