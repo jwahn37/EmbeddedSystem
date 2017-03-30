@@ -83,10 +83,11 @@ int main(void)
 //		sprintf(buf, "Hello Main Process input process is %d\n",getpid());
  	    
 		pushSwitch(swDevice,fpIn);
-		printf("while in \n");
-	//	readKey(rkDevice,fpIn);
-		send_buf[0]=1;
+	//	printf("while in \n");
+		readKey(rkDevice,fpIn);
+	//	send_buf[0]=1;
 		write(fpIn,send_buf,255);
+//		write(fpIn,&rkDevice,255);
 
 	}
 	close(swDevice.device);
