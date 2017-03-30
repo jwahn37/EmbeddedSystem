@@ -1,7 +1,7 @@
 #include<dirent.h>
 #include<errno.h>
 #include<fcntl.h>
-//#include<linux/input.h>
+#include<linux/input.h>
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
@@ -41,7 +41,7 @@ typedef struct{
 
 void readKey(DEVICE rkDevice, int fpIn);
 void clockMode(int fpIn);
-void pushSwitch(int fpIn);
+void pushSwitch(DEVICE swDevice, int fpIn);
 void user_signaml1(int sig);
 
 DEVICE connectToRKDevice(DEVICE rkDevice);
@@ -82,9 +82,9 @@ int main(void)
 //		memset(buf,0x00,255);
 //		sprintf(buf, "Hello Main Process input process is %d\n",getpid());
  	    
-	//	clockMode(fpIn);
+		pushSwitch(swDevice,fpIn);
 		printf("while in \n");
-		readKey(rkDevice,fpIn);
+	//	readKey(rkDevice,fpIn);
 		send_buf[0]=1;
 		write(fpIn,send_buf,255);
 
@@ -177,35 +177,35 @@ void user_signal1(int sig)
 {
 	quit = 1;
 }
-
+/*
 void clockMode(int fpIn)
 {
 //	char buf[256];
 	
 	pushSwitch(fpIn);
-/*
+
 	while(1){	
 		memset(buf,0x00,255);
 		sprintf(buf, "Hello Main Process input process is %d\n",getpid());
 		write(fpIn,buf,strlen(buf));
 		sleep(1);
 	}
-*/
-}
 
+}
+*/
 DEVICE connectToSWDevice(DEVICE swDevice)
 {
 	int i;
 	char* a="hello";
 	memset(swDevice.devicePath,0x00,255);
-	memcpy(swDevice.devicePath,"/dev/fpga_push_switch",18);
+	memcpy(swDevice.devicePath,"/dev/fpga_push_switch",22);
 	printf("%s path \n ",swDevice.devicePath);
 	
 //	for(i=0;i<strlen(rkDevice.devicePath);i++)
 //		printf("%c", rkDevice.devicePath);
 //	printf("\n");
 
-	if((swDevice.device = open (swDevice.devicePath, O_RKWR)) == -1) {
+	if((swDevice.device = open (swDevice.devicePath, O_RDWR)) == -1) {
 		printf("Device Open Error\n");
 		close(swDevice.device);
 	}
@@ -215,14 +215,14 @@ DEVICE connectToSWDevice(DEVICE swDevice)
 
 }
 
-void pushSwitch(int fpIn)
+void pushSwitch(DEVICE swDevice, int fpIn)
 {
-	int dev;
+//	int dev;
 	int i;
 	int buff_size;
 	
 	unsigned char push_sw_buff[MAX_BUTTON];
-	char send_buf[255];
+//	char send_buf[255];
 	char chFlag=0;
 
 	//open device driver
@@ -244,7 +244,7 @@ void pushSwitch(int fpIn)
 
 //	while(!quit){
 	//	usleep(400000);
-		read(dev, &push_sw_buff, MAX_BUTTON);
+		read(swDevice.device, &push_sw_buff, MAX_BUTTON);
 		
 
 		//first character is change flag
