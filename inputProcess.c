@@ -84,7 +84,7 @@ int main(void)
 	//	clockMode(fpIn);
 		printf("while in \n");
 		readKey(rkDevice,fpIn);
-
+		send_buf[0]=1;
 		write(fpIn,send_buf,255);
 
 	}
@@ -105,7 +105,7 @@ DEVICE connectToRKDevice(DEVICE rkDevice)
 //		printf("%c", rkDevice.devicePath);
 //	printf("\n");
 
-	if((rkDevice.device = open (rkDevice.devicePath, O_RDONLY)) == -1) {
+	if((rkDevice.device = open (rkDevice.devicePath, O_RDONLY|O_NONBLOCK)) == -1) {
 		printf ("%s is not a vaild device.n", rkDevice.devicePath);
 	}
 	return rkDevice;
