@@ -22,22 +22,33 @@
 #define NO_DV 0 
 #define FND_DEV 3
 
+#define HOME 102	//read key
+#define BACK 158
+#define PROG 116
+#define VOL_UP 115
+#define VOL_DOWN 114
+
+#define MODE_NUM 1
+
 typedef struct {
 	char device;
-	char readKey[2];
+	unsigned char readKey;
 	char switchB[9];
-	char buf[243];
+	char buf[244];
 //	char msgBuf[254];
+}REV_MSG;
 
-}MSG;
+
 typedef struct{
 //	char device;
 	char fnd[4];
-	char led;
+	unsigned char led;
 	char buf[250];
 }SEND_MSG;
+
 void makeFIFOPipe();
 void main_process(int fpIn, int fpOut);
+int mainKey(REV_MSG revMsg);
 //void input_process(char* buf,int fpIn);
 //void output_process(char* buf,int fpOut);
 
@@ -127,8 +138,9 @@ void main_process(int fpIn, int fpOut)
 	int i;
  	char buf[255];
 	char output[5]={1,2,3,4,0};
-	MSG msg;
-	
+	REVMSG revMsg;
+	int mode;
+
 	if((fpIn=open(PIPE_INPUT,O_RDONLY))<0)
 	{
 		perror("open error:");
@@ -146,21 +158,31 @@ void main_process(int fpIn, int fpOut)
 //		memset(buf,0x00, 255);
 //		n=read(fpIn,buf,255);
 		
-		memset(&(msg.device),0x00,255);
-		n=read(fpIn,&(msg.device),255);	
-		
-		printf("main : ");
-		printf("from %d , ",msg.device);
-		for(i=0;i<9;i++)
-			printf("[%d] ",msg.switchB[i]);
-		printf("\n");
+		//read from input process
+		memset(&(revMsg.device),0x00,255);
+		n=read(fpIn,&(revMsg.device),255);	
 
+	/*	
+		printf("main : ");
+		printf("from %d , ",revMsg.device);
+		for(i=0;i<9;i++)
+			printf("[%d] ",revMsg.switchB[i]);
+		printf("\n");
+*/
 		//
+		mode=mainKey(revMsg);
+		if(mode==1){sendMsg=clockMode(sendMsg);}
+		if(mode==2){}
+		if(mode==3){}
+		if(mode==4){}
+		//...
 			
 		memset(buf,0x00,255);
 		output[3]=(output[3]+1)%10;
 		output[4]=(output[4]+1)%8;
 //		buf[0]=FND_DEV;
+
+		//output to process
 		memcpy(&(sendMsg.fnd[0]),output,5);
 		write(fpOut,&(sendMsg.fnd[0]),255);
 		usleep(5000);
@@ -169,3 +191,24 @@ void main_process(int fpIn, int fpOut)
 
 }
 
+int mainKey(REV_MSG revMsg)
+{
+	int mode;
+	//if(revMsg.readKey == HOME)	//
+	if(revMsg.readKey == BACK)	//program exit
+	{
+		exit(0); //child process ㅈ종료방법 찾기
+	}
+	if(revMsg.readKey == PROG)
+	{}
+	if(revMsg.readKey == VOL_UP) //change mode +
+	{
+		mode = (mode+1) % MODE_NUM;
+	}
+	if(revMsg.readKey == VOL_DOWN) //change mode -
+	{
+		mode = (mode+(MODE_NUM-1)) % MODE_NUM;
+	}
+	return mode;
+
+}

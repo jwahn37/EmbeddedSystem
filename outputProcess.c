@@ -21,7 +21,7 @@ typedef struct{
 
 typedef struct{
 	char fnd[4];	//size = 4
-	char led;
+	unsigned char led;
 	char revBuf[250];
 }REV_MSG;
 

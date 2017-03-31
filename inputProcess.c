@@ -43,11 +43,11 @@ typedef struct{
 
 typedef struct{
 	char device;
-	char readKey[2]; //size is 2byte
+	unsigned char readKey; //size is 2byte
 	char switchB[9]; //size is 9byte
-	char sendBuf[243];
+	char sendBuf[244];
 
-}SEND;
+}SEND_MSG;
 
 
 void readKey(DEVICE rkDevice, int fpIn);
@@ -58,7 +58,7 @@ void user_signaml1(int sig);
 DEVICE connectToRKDevice(DEVICE rkDevice);
 DEVICE connectToSWDevice(DEVICE swDevice);
 
-SEND sendMsg;
+SEND_MSG sendMsg;
 unsigned char quit = 0;
 int fpIn;
 //char send_buf[255];
@@ -93,11 +93,13 @@ int main(void)
 		usleep(1000000);
 //		memset(buf,0x00,255);
 //		sprintf(buf, "Hello Main Process input process is %d\n",getpid());
- 	    	memset(&sendMsg,0x00,255);
+ 	    memset(&sendMsg,0x00,255);
 		pushSwitch(swDevice,fpIn);
 	//	printf("while in \n");
 		readKey(rkDevice,fpIn);
 	//	send_buf[0]=1;
+
+		//send message to main process
 		write(fpIn,&sendMsg,255);
 //		write(fpIn,&rkDevice,255);
 		sendMsg.device=NO_DV;

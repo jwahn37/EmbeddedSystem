@@ -11,6 +11,7 @@ Auth : largest@huins.com */
 
 #define LED_DEVICE "/dev/fpga_led"
 
+
 int main(int argc, char **argv)
 {
 	int dev;
@@ -36,7 +37,7 @@ int main(int argc, char **argv)
         exit(1);
     }
 
-    retval=write(dev,&data,1);	
+   ]
     if(retval<0) {
         printf("Write Error!\n");
         return -1;
