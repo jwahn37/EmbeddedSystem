@@ -31,7 +31,7 @@
 #define VOL_DOWN 114
 
 #define MODE_NUM 1
-
+/*
 typedef struct {
 	char device;
 	unsigned char readKey;
@@ -39,6 +39,7 @@ typedef struct {
 	char buf[244];
 //	char msgBuf[254];
 }REV_MSG;
+*/
 /*
 
 typedef struct{
@@ -173,7 +174,7 @@ void main_process(int fpIn, int fpOut)
 */
 		//
 		mode=mainKey(revMsg);
-		if(mode==1){sendMsg=clockMode(sendMsg);}
+		if(mode==1){sendMsg=clockMode(sendMsg,revMsg);}
 		if(mode==2){}
 		if(mode==3){}
 		if(mode==4){}

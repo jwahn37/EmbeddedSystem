@@ -2,6 +2,7 @@
 #include<time.h>
 #include<stdlib.h>
 #include<string.h>
+#include "module.h"
 
 #define LED_1 128
 #define LED_3_4 48
@@ -13,13 +14,14 @@ void mainProcess();
 void inputProcess();
 
 
-
+/*
 typedef struct{
 	char fnd[4];	//size = 4
 	unsigned char led;
 	char revBuf[250];
 }SEND_MSG;
-
+*/
+/*
 typedef struct{
 	char device;
 	char readKey[2];
@@ -27,12 +29,13 @@ typedef struct{
 	char buf[243];
 
 }REV_MSG;
-
+*/
 SEND_MSG incHour(SEND_MSG sendMsg);
 SEND_MSG incMin(SEND_MSG sendMsg);
 SEND_MSG ledClock(SEND_MSG sendMsg);
 SEND_MSG boardTime(SEND_MSG sendMsg);
-int main(void) {
+
+SEND_MSG clockMode(SEND_MSG sendMsg, REV_MSG revMsg) {
 
   time_t timerS=0,timerF=0;
   float gap;
@@ -40,8 +43,8 @@ int main(void) {
   char switchP[4];
   char changeFlag=0;
   char input;
-  REV_MSG revMsg;
-  SEND_MSG sendMsg;
+  //REV_MSG revMsg;
+ // SEND_MSG sendMsg;
  //fnd 
  /*timer = time(NULL); // 현재 시각을 초 단위로 얻기
 
@@ -111,7 +114,7 @@ int main(void) {
             }
             
 	}   
-     return 0;
+     return SEND_MSG;
 }
 
 SEND_MSG boardTime(SEND_MSG sendMsg)

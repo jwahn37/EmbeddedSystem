@@ -5,4 +5,12 @@ typedef struct{
 	char buf[250];
 }SEND_MSG;
 
-SEND_MSG clockMode(SEND_MSG sendMsg);
+typedef struct {
+	char device;
+	unsigned char readKey;
+	char switchB[9];
+	char buf[244];
+//	char msgBuf[254];
+}REV_MSG;
+
+SEND_MSG clockMode(SEND_MSG sendMsg, REV_MSG revMsg);
