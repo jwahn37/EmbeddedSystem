@@ -7,7 +7,7 @@
 //#include<msg.h>
 #include<sys/stat.h>
 #include<fcntl.h>
-
+#include<time.h>
 #include "modules.h"
 
 #define PIPE_READ 0
@@ -51,7 +51,7 @@ typedef struct{
 */
 void makeFIFOPipe();
 void main_process(int fpIn, int fpOut);
-int mainKey(REV_MSG revMsg);
+int mainKey(REV_MSG revMsg,int mode);
 //void input_process(char* buf,int fpIn);
 //void output_process(char* buf,int fpOut);
 
@@ -141,8 +141,11 @@ void main_process(int fpIn, int fpOut)
 	int i;
  	char buf[255];
 	char output[5]={1,2,3,4,0};
-	REVMSG revMsg;
-	int mode;
+	REV_MSG revMsg;
+	int pastMode=100, mode=100;
+	char clockChFlag=0;
+	
+//	time_t ledTime=0;
 
 	if((fpIn=open(PIPE_INPUT,O_RDONLY))<0)
 	{
@@ -156,6 +159,7 @@ void main_process(int fpIn, int fpOut)
 		exit(EXIT_FAILURE);
 	}
 	printf("main\n");
+
 	while(1)
 	{
 //		memset(buf,0x00, 255);
@@ -173,20 +177,40 @@ void main_process(int fpIn, int fpOut)
 		printf("\n");
 */
 		//
-		mode=mainKey(revMsg);
-		if(mode==1){sendMsg=clockMode(sendMsg,revMsg);}
-		if(mode==2){}
-		if(mode==3){}
-		if(mode==4){}
+//		mode=mainKey(revMsg,mode);
+		printf("from now clock mode------------\n");
+		printf("mode : %d read key : %d\n",mode,revMsg.readKey);
+		mode=0;
+		if(mode==0){
+			if(pastMode!=mode) //init
+			{
+				revMsg.switchB[0]=9;	
+				revMsg.switchB[1]=9;	
+				revMsg.switchB[2]=9;	
+				revMsg.switchB[3]=9;	
+		
+			}
+			sendMsg=clockMode(sendMsg,revMsg,&clockChFlag,time(NULL));
+			pastMode=mode;
+		}
+		if(mode==1){
+			pastMode=mode;
+		}
+		if(mode==2){
+			pastMode=mode;
+		}
+		if(mode==3){
+			pastMode=mode;
+		}
 		//...
 			
-		memset(buf,0x00,255);
-		output[3]=(output[3]+1)%10;
-		output[4]=(output[4]+1)%8;
+//		memset(buf,0x00,255);
+//		output[3]=(output[3]+1)%10;
+//		output[4]=(output[4]+1)%8;
 //		buf[0]=FND_DEV;
 
 		//output to process
-		memcpy(&(sendMsg.fnd[0]),output,5);
+//		memcpy(&(sendMsg.fnd[0]),output,5);
 		write(fpOut,&(sendMsg.fnd[0]),255);
 		usleep(5000);
 	}
@@ -194,9 +218,8 @@ void main_process(int fpIn, int fpOut)
 
 }
 
-int mainKey(REV_MSG revMsg)
+int mainKey(REV_MSG revMsg,int mode)
 {
-	int mode;
 	//if(revMsg.readKey == HOME)	//
 	if(revMsg.readKey == BACK)	//program exit
 	{

@@ -177,7 +177,7 @@ void readKey(DEVICE rkDevice, int fpIn)
 		sendMsg.device=RK_DV;
 		memset(&(sendMsg.device),0x00,255);
 //		memcpy((&(sendMsg.device)+sizeof(char)),&ev[0].code,sizeof(ev[0].code));
-		memcpy(sendMsg.readKey,&ev[0].code,sizeof(ev[0].code));
+		memcpy(&(sendMsg.readKey),&ev[0].code,sizeof(ev[0].code));
 
 	//	send to mainprocess	
 	//	write(fpIn,send_buf,255);

@@ -2,16 +2,16 @@
 #include<time.h>
 #include<stdlib.h>
 #include<string.h>
-#include "module.h"
+#include "modules.h"
 
 #define LED_1 128
 #define LED_3_4 48
 #define LED_3 32
 #define LED_4 16
 
-void outputProcess();
-void mainProcess();
-void inputProcess();
+//void outputProcess();
+//void mainProcess();
+//void inputProcess();
 
 
 /*
@@ -35,15 +35,17 @@ SEND_MSG incMin(SEND_MSG sendMsg);
 SEND_MSG ledClock(SEND_MSG sendMsg);
 SEND_MSG boardTime(SEND_MSG sendMsg);
 
-SEND_MSG clockMode(SEND_MSG sendMsg, REV_MSG revMsg) {
+SEND_MSG clockMode(SEND_MSG sendMsg, REV_MSG revMsg,char* changeFlag,time_t timerS){
 
-  time_t timerS=0,timerF=0;
+  time_t timerF=0;
   float gap;
  // struct tm *t;
-  char switchP[4];
-  char changeFlag=0;
+//  char switchP[4];
+//  char changeFlag=0;
   char input;
-  //REV_MSG revMsg;
+  char switchB[4];
+  int i;  
+//REV_MSG revMsg;
  // SEND_MSG sendMsg;
  //fnd 
  /*timer = time(NULL); // 현재 시각을 초 단위로 얻기
@@ -56,51 +58,66 @@ SEND_MSG clockMode(SEND_MSG sendMsg, REV_MSG revMsg) {
     sendMsg.fnd[2]=t->tm_min/10;
     sendMsg.fnd[3]=t->tm_min%10;
     */
-    sendMsg = boardTime(sendMsg);
+   // sendMsg = boardTime(sendMsg);
 //최초 led
-    sendMsg.led=LED_1; //led 1
+    //sendMsg.led=LED_1; //led 1
 
     //printf("%d %d",t->tm_min,sendMsg.fnd[3]);
 
 //input Process로부터 입력을 받아온다. sw1,sw2,sw3,sw4
    // srand((unsigned int)time(NULL));
    // timerS = clock(); // 현재 시각을 초 단위로 얻기
- 	 timerS = time(NULL);
-     while(1){
+ //	 timerS = time(NULL);
+ //    while(1){
           //      printf("time : %d %d : %d %d\n",sendMsg.fnd[0],sendMsg.fnd[1],sendMsg.fnd[2],sendMsg.fnd[3]);
-                changeFlag=1;
+    //    changeFlag=1;
         
        
         //printf("%ld\n",time(NULL));
+	memset(switchB,0x00,4);
+	memcpy(switchB,revMsg.switchB,4);
+	for( i=0;i<4;i++)	switchB[i]=(char)(switchB[i]+'0');	//change to string from integer
 
-	    memcpy(switchP,revMsg.switchB,4);
+	printf("clock button : %c %c %c %c// %d\n",switchB[0],switchB[1],switchB[2],switchB[3],revMsg.switchB[4]);	
+	printf("strncmp : %d\n",strncmp(switchB,"9999",4));
 
-        if(!strcmp(switchP,"1000"))  //시간 변화 가능
+	if(!strncmp(switchB,"9999",4)) //init
+	{
+		printf("LED init\n");
+    		sendMsg = boardTime(sendMsg);
+		//최초 led
+    		sendMsg.led=LED_1; //led 1
+	}
+        if(!strncmp(switchB,"1000",4))  //시간 변화 가능
         {
-            if(changeFlag==0)   {changeFlag=1;   sendMsg.led=LED_3_4;} //led 3,4 
-            else                {changeFlag=0;   sendMsg.led=LED_1;}  //led 1
+		printf("time change\n");
+            if(*changeFlag==0)   {*changeFlag=1;   sendMsg.led=LED_3_4;} //led 3,4 
+            else                {*changeFlag=0;   sendMsg.led=LED_1;}  //led 1
         }   
-        if(!strcmp(switchP,"0100")) //시간 reset
+        if(!strncmp(switchB,"0100",4)) //시간 reset
         {   
-            boardTime(sendMsg);
+		printf("reset\n");
+            sendMsg=boardTime(sendMsg);
         }   
-        if(!strcmp(switchP,"0010")) //한시간증가
+        if(!strncmp(switchB,"0010",4)) //한시간증가
         {
-            if(changeFlag)
+		printf("inchour\n");
+            if(*changeFlag)
                 sendMsg=incHour(sendMsg);
         }   
-        if(!strcmp(switchP,"0001")) //1분증가
+        if(!strncmp(switchB,"0001",4)) //1분증가
         {
-            if(changeFlag)
+		printf("incmin\n");
+            if(*changeFlag)
                 sendMsg=incMin(sendMsg);
         }
-        if(changeFlag)  //led
+        if(*changeFlag)  //led
             {
                 
              //   ledClock(sendMsg,timer);
                  timerF = 0;
                  timerF = time(NULL);
-                gap=(timerF-timerS);
+                 gap=(timerF-timerS);
                 
                 //printf("%f\n",gap); //this should not be erased because ...
                 //gap is one second change led
@@ -113,8 +130,9 @@ SEND_MSG clockMode(SEND_MSG sendMsg, REV_MSG revMsg) {
                 }
             }
             
-	}   
-     return SEND_MSG;
+//	}   
+     	printf("fnd : %d %d %d %d\n",sendMsg.fnd[0],sendMsg.fnd[1],sendMsg.fnd[2],sendMsg.fnd[3]);
+	return sendMsg;
 }
 
 SEND_MSG boardTime(SEND_MSG sendMsg)
