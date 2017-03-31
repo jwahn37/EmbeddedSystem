@@ -8,6 +8,8 @@
 #include<sys/stat.h>
 #include<fcntl.h>
 
+#include "modules.h"
+
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
@@ -37,7 +39,7 @@ typedef struct {
 	char buf[244];
 //	char msgBuf[254];
 }REV_MSG;
-
+/*
 
 typedef struct{
 //	char device;
@@ -45,7 +47,7 @@ typedef struct{
 	unsigned char led;
 	char buf[250];
 }SEND_MSG;
-
+*/
 void makeFIFOPipe();
 void main_process(int fpIn, int fpOut);
 int mainKey(REV_MSG revMsg);
