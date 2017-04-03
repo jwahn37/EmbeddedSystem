@@ -144,7 +144,7 @@ void main_process(int fpIn, int fpOut)
 	REV_MSG revMsg;
 	int pastMode=100, mode=100;
 	char clockChFlag=0;
-	
+	time_t timeS;	
 //	time_t ledTime=0;
 
 	if((fpIn=open(PIPE_INPUT,O_RDONLY))<0)
@@ -190,7 +190,9 @@ void main_process(int fpIn, int fpOut)
 				revMsg.switchB[3]=9;	
 		
 			}
-			sendMsg=clockMode(sendMsg,revMsg,&clockChFlag,time(NULL));
+			if(clockChFlag==0)
+				timeS=time(NULL);
+			sendMsg=clockMode(sendMsg,revMsg,&clockChFlag,&timeS);
 			pastMode=mode;
 		}
 		if(mode==1){
