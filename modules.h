@@ -13,4 +13,4 @@ typedef struct {
 //	char msgBuf[254];
 }REV_MSG;
 
-SEND_MSG clockMode(SEND_MSG sendMsg, REV_MSG revMsg,char* changeFlag, time_t timeStart);
+SEND_MSG clockMode(SEND_MSG sendMsg, REV_MSG revMsg,char* changeFlag, time_t* timeStart);

@@ -35,7 +35,7 @@ SEND_MSG incMin(SEND_MSG sendMsg);
 SEND_MSG ledClock(SEND_MSG sendMsg);
 SEND_MSG boardTime(SEND_MSG sendMsg);
 
-SEND_MSG clockMode(SEND_MSG sendMsg, REV_MSG revMsg,char* changeFlag,time_t timerS){
+SEND_MSG clockMode(SEND_MSG sendMsg, REV_MSG revMsg,char* changeFlag,time_t* timerS){
 
   time_t timerF=0;
   float gap;
@@ -117,7 +117,7 @@ SEND_MSG clockMode(SEND_MSG sendMsg, REV_MSG revMsg,char* changeFlag,time_t time
              //   ledClock(sendMsg,timer);
                  timerF = 0;
                  timerF = time(NULL);
-                 gap=(timerF-timerS);
+                 gap=(timerF-*timerS);
                 
                 //printf("%f\n",gap); //this should not be erased because ...
                 //gap is one second change led
@@ -126,7 +126,7 @@ SEND_MSG clockMode(SEND_MSG sendMsg, REV_MSG revMsg,char* changeFlag,time_t time
                     
                     sendMsg=ledClock(sendMsg);
                     
-                    timerS=timerF;    
+                    *timerS=timerF;    
                 }
             }
             
