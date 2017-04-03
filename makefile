@@ -9,6 +9,9 @@ OBJO =$(EXECDIR)outputProcess
 OBJM =clockMode.o
 SRCM =clockMode.c
 
+OBJM2 = countMode.o
+SRCM2 = countMode.c
+
 PIPEI =$(EXECDIR)input_pipeLine
 PIPEO =$(EXECDIR)output_pipeLine
 
@@ -22,7 +25,7 @@ CFLAGS = -g -c
 TARGET =$(EXECDIR)20121604
 
 $(TARGET) : $(OBJO)
-	$(CC) -o $(TARGET) $(SRC) $(OBJM) 
+	$(CC) -o $(TARGET) $(SRC) $(OBJM) $(OBJM2)
 	$(SEND) $(EXECDIR) $(BOPATH)	
 $(OBJO) : $(OBJI)
 	$(CC) -o $(OBJO) $(SRCO)
@@ -30,8 +33,10 @@ $(OBJO) : $(OBJI)
 $(OBJI) :$(OBJM)
 	$(CC) -o $(OBJI) $(SRCI)
 
-$(OBJM) :
+$(OBJM) :$(OBJM2)
 	$(CC) -c $(SRCM)
+$(OBJM2) :
+	$(CC) -c $(SRCM2)
 
 clean : 
 	rm -rf $(TARGET)
@@ -40,3 +45,4 @@ clean :
 	rm -rf $(PIPEI)
 	rm -rf $(PIPEO)
 	rm -rf $(OBJM)
+	rm -rf $(OBJM2)

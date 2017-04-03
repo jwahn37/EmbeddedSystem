@@ -145,6 +145,7 @@ void main_process(int fpIn, int fpOut)
 	int pastMode=100, mode=100;
 	char clockChFlag=0;
 	time_t timeS;	
+	char numbState = DECIMAL_NUMB;
 //	time_t ledTime=0;
 
 	if((fpIn=open(PIPE_INPUT,O_RDONLY))<0)
@@ -177,25 +178,28 @@ void main_process(int fpIn, int fpOut)
 		printf("\n");
 */
 		//
-//		mode=mainKey(revMsg,mode);
-		printf("from now clock mode------------\n");
+////		mode=mainKey(revMsg,mode);
+//		printf("from now clock mode------------\n");
 		printf("mode : %d read key : %d\n",mode,revMsg.readKey);
-		mode=0;
+		mode=1;
+	
+
+		if(pastMode!=mode) //init
+		{
+			revMsg.switchB[0]=9;	
+			revMsg.switchB[1]=9;	
+			revMsg.switchB[2]=9;	
+			revMsg.switchB[3]=9;	
+		}
+
 		if(mode==0){
-			if(pastMode!=mode) //init
-			{
-				revMsg.switchB[0]=9;	
-				revMsg.switchB[1]=9;	
-				revMsg.switchB[2]=9;	
-				revMsg.switchB[3]=9;	
-		
-			}
 			if(clockChFlag==0)
 				timeS=time(NULL);
 			sendMsg=clockMode(sendMsg,revMsg,&clockChFlag,&timeS);
 			pastMode=mode;
 		}
 		if(mode==1){
+			sendMsg=counterMode(sendMsg,revMsg,&numbState);
 			pastMode=mode;
 		}
 		if(mode==2){
