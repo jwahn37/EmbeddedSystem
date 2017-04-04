@@ -203,6 +203,7 @@ void main_process(int fpIn, int fpOut)
 			pastMode=mode;
 		}
 		if(mode==2){
+			sendMsg=textEditor(sendMsg, revMsg);
 			pastMode=mode;
 		}
 		if(mode==3){

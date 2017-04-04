@@ -8,7 +8,8 @@ typedef struct{
 //	char device;
 	char fnd[4];
 	unsigned char led;
-	char buf[250];
+	char lcd[32];
+	char buf[218];
 }SEND_MSG;
 
 typedef struct {
@@ -21,3 +22,4 @@ typedef struct {
 
 SEND_MSG clockMode(SEND_MSG sendMsg, REV_MSG revMsg,char* changeFlag, time_t* timeStart);
 SEND_MSG counterMode(SEND_MSG sendMsg, REV_MSG revMsg, char* numbState);
+SEND_MSG textEditor(SEND_MSG sendMsg, REV_MSG revMsg);

@@ -14,6 +14,11 @@
 
 #define FND_DEVICE "/dev/fpga_fnd"
 #define LED_DEVICE "/dev/fpga_led"
+#define LCD_DEVICE "/dev/fpga_text_lcd"
+
+#define LCD_MAXBUF 32
+#define LCD_LINEBUF 16
+
 typedef struct{
 	char device;
 	char devicePath[255];
@@ -22,15 +27,17 @@ typedef struct{
 typedef struct{
 	char fnd[4];	//size = 4
 	unsigned char led;
-	char revBuf[250];
+	char lcd[32];
+	char revBuf[218];
 }REV_MSG;
 
 DEVICE connectToFNDDevice(DEVICE devFnd);
 DEVICE connectToLEDDevice(DEVICE devLed);
-
+DEVICE connectToLCDDevice(DEVICE devLcd);
 
 void fndOut(DEVICE devFnd, int fpOut);
 void ledOut(DEVICE devLed, int fpOut);
+void lcdOut(DEVICE devLcd, int fpOut);
 
 REV_MSG revMsg;
 int main(void)
@@ -38,7 +45,7 @@ int main(void)
 	int fpOut;
 	int n, fd[2];
 //	char buf[255];
-	DEVICE fndDev, ledDev;
+	DEVICE fndDev, ledDev, lcdDev;
 //	REC_MSG revMsg;
 	if((fpOut=open(PIPE_OUTPUT,O_RDONLY))<0)
 	{
@@ -48,7 +55,8 @@ int main(void)
 //	clockMode(fpOut);
 	fndDev = connectToFNDDevice(fndDev);
 	ledDev = connectToLEDDevice(ledDev);
-	while(1)
+	lcdDeb = connectToLCDDevice(lcdDev);
+	hile(1)
 	{
 		//errer check
 		memset(&(revMsg.fnd[0]),0x00,255);
@@ -58,6 +66,7 @@ int main(void)
 		
 		fndOut(fndDev, fpOut);
 		ledOut(ledDev, fpOut);		
+		lcdOut(lcdDev, fpOut);
 //		fprintf(stderr, "%d",revMsg.device);
 //		fprintf(stderr, "%d\n",revMsg.revBuf[0]);
 //		fprintf(stderr, "hello output\n");
@@ -96,6 +105,21 @@ DEVICE connectToLEDDevice(DEVICE ledDev)
 
 	return ledDev;
 }
+
+DEVICE connectToLCDDevice(DEVICE lcdDev)
+{
+	lcdDev.device = open(LCD_DEVICE, O_WRONLY);
+	memset(lcdDev.devicePath,0x00,255);
+	memcpy(lcdDev.devicePath,LED_DEVICE,18);
+	
+	if(lcdDev.device<0)
+		printf("Device open error :  %s\n",LCD_DEVICE);
+		exit(1);
+	}
+
+	return lcdDev;
+}
+
 void fndOut(DEVICE fndDev, int fpOut)
 {
 	int dev;
@@ -183,4 +207,13 @@ void ledOut(DEVICE ledDev, int fpOut)
 
 
 
+}
+
+void lcdOut(DEVICE lcdDev, int fpOut)
+{
+	char string[LCD_MAXBUF];
+	memset(string,0x00,LCD_MAXBUF);
+	memcpy(string,revMsg.lcd,LCD_MAXBUF);
+	write(lcdDev.device, ,LCD_MAXBUF);	
+//	close(lcdDev);
 }
