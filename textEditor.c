@@ -7,7 +7,7 @@
 
 int numOfButton(REV_MSG revMsg);
 SEND_MSG oneButtonClicked(SEND_MSG sendMsg, REV_MSG revMsg,char alphabet[9][3], char (*pastClicked)[2], char numFlag);
-SEND_MSG twoButtonClicked(SEND_MSG sendMsg, REV_MSG revMsg,char alphabet[9][3], char (*pastClicked)[2], char* numFlag);
+SEND_MSG twoButtonClicked(SEND_MSG sendMsg, REV_MSG revMsg,char alphabet[9][3], char (*pastClicked)[2], char* numFlag, unsigned char fpga_number[2][10]);
 SEND_MSG fullLcd(SEND_MSG sendMsg,char input);
 //SEND_MSG textEditor(SEND_MSG sendMsg, REV_MSG revMsg)
 SEND_MSG textEditor(SEND_MSG sendMsg, REV_MSG revMsg)
@@ -17,15 +17,27 @@ SEND_MSG textEditor(SEND_MSG sendMsg, REV_MSG revMsg)
 	static char numFlag=0;
 	static char pastClicked[2]={100,0}; //1st index : past clicked button number, 2nd index : the num of continuously clicked same button
 	static char alphabet[9][3]={ {'.','Q','Z'}, {'A','B','C'}, {'D','E','F'}, {'G','H','I'}, {'J','K','L'}, {'M','N','O'}, {'P','R','S'}, {'T','U','V'}, {'W','X','Y'}};
-	printf("textedit start/////\n");
 
-	if(!strncmp(revMsg.switchB,"9999",4))	//init
+	static unsigned char fpga_number[2][10] = {
+	{0x1c,0x36,0x63,0x63,0x63,0xff,0xff,0x63,0x63,0x63},
+	{0x0c,0x1c,0x0c,0x0c,0x0c,0x0c,0x0c,0x0c,0x3f,0x3f}
+	};
+	char initSwitch[4];
+	int i;
+
+	printf("textedit start %d %d %d %d %d/////\n",revMsg.switchB[0],revMsg.switchB[1],revMsg.switchB[2],revMsg.switchB[3],memcmp(revMsg.switchB,"9999",4));
+
+	memcpy(initSwitch,"9999",4);
+	for(i=0;i<4;i++)	initSwitch[i]=initSwitch[i]-'0';
+
+	if(!memcmp(revMsg.switchB,initSwitch,4))	//init
 	{
 		printf("lcd init\n");
+		memcpy(sendMsg.dot,fpga_number[0],10);
 		memset(sendMsg.lcd,0x00,32);
 	}
 	if(numOfInput(revMsg)==1)	sendMsg=oneButtonClicked(sendMsg,revMsg,alphabet, &pastClicked, numFlag);
-	else if(numOfInput(revMsg)==2)	sendMsg=twoButtonClicked(sendMsg,revMsg, alphabet, &pastClicked, &numFlag);
+	else if(numOfInput(revMsg)==2)	sendMsg=twoButtonClicked(sendMsg,revMsg, alphabet, &pastClicked, &numFlag, fpga_number);
 
 
 	return sendMsg;
@@ -100,7 +112,7 @@ SEND_MSG oneButtonClicked(SEND_MSG sendMsg, REV_MSG revMsg, char alphabet[9][3],
 	return sendMsg;
 
 }
-SEND_MSG twoButtonClicked(SEND_MSG sendMsg, REV_MSG revMsg, char alphabet[9][3], char (*pastClicked)[2], char* numFlag)
+SEND_MSG twoButtonClicked(SEND_MSG sendMsg, REV_MSG revMsg, char alphabet[9][3], char (*pastClicked)[2], char* numFlag, unsigned char fpga_number[2][10])
 {
 	char clicked[2];
 	int i,j;
@@ -120,7 +132,8 @@ SEND_MSG twoButtonClicked(SEND_MSG sendMsg, REV_MSG revMsg, char alphabet[9][3],
 		(*pastClicked)[1]=0;
 	
 		*numFlag = (*numFlag==0)?1:0;	//change num flag
-		sendMsg.dot = (sendMsg.dot==0)? 1 : 0; //dot setting
+//		sendMsg.dot = (sendMsg.dot==0)? 1 : 0; //dot setting
+		memcpy(sendMsg.dot, fpga_number[*numFlag], 10);
 	}
 	else if(clicked[0]==2 && clicked[1]==3) //clear lcd
 	{

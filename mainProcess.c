@@ -144,7 +144,7 @@ void main_process(int fpIn, int fpOut)
 	REV_MSG revMsg;
 	int pastMode=100, mode=100;
 	char clockChFlag=0;
-	time_t timeS;	
+	time_t timeS,timeS2;	
 	char numbState = DECIMAL_NUMB;
 //	time_t ledTime=0;
 
@@ -180,15 +180,19 @@ void main_process(int fpIn, int fpOut)
 		//
 ////		mode=mainKey(revMsg,mode);
 //		printf("from now clock mode------------\n");
-		printf("mode : %d read key : %d\n",mode,revMsg.readKey);			mode=2;
+		printf("mode : %d read key : %d\n",mode,revMsg.readKey);			mode=3;
 	
 
 		if(pastMode!=mode) //init
-		{
+		{	printf("button is 9999\n");
 			revMsg.switchB[0]=9;	
 			revMsg.switchB[1]=9;	
 			revMsg.switchB[2]=9;	
-			revMsg.switchB[3]=9;	
+			revMsg.switchB[3]=9;
+			memset(sendMsg.fnd,0x00,4);
+			sendMsg.led=0;
+			memset(sendMsg.lcd,0x00,32);
+			memset(sendMsg.dot,0x00,10);	
 		}
 
 		if(mode==0){
@@ -206,6 +210,8 @@ void main_process(int fpIn, int fpOut)
 			pastMode=mode;
 		}
 		if(mode==3){
+			timeS2=time(NULL);
+			sendMsg=drawBoard(sendMsg, revMsg,&timeS);
 			pastMode=mode;
 		}
 

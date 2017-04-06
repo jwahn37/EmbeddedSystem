@@ -30,8 +30,8 @@ typedef struct{
 	char fnd[4];	//size = 4
 	unsigned char led;
 	char lcd[32];
-	unsigned char dot;
-	char revBuf[217];
+	unsigned char dot[10];
+	char revBuf[208];
 }REV_MSG;
 
 DEVICE connectToFNDDevice(DEVICE devFnd);
@@ -42,7 +42,7 @@ DEVICE connectToDOTDevice(DEVICE devDot);
 void fndOut(DEVICE devFnd, int fpOut);
 void ledOut(DEVICE devLed, int fpOut);
 void lcdOut(DEVICE devLcd, int fpOut);
-void dotOut(DEVICE devDot, int fpOut, unsigned char fpga_number[2][10]);
+void dotOut(DEVICE devDot, int fpOut);
 
 REV_MSG revMsg;
 int main(void)
@@ -79,7 +79,7 @@ int main(void)
 		fndOut(fndDev, fpOut);
 		ledOut(ledDev, fpOut);		
 		lcdOut(lcdDev, fpOut);
-		dotOut(dotDev, fpOut, fpga_number);
+		dotOut(dotDev, fpOut);
 //		fprintf(stderr, "%d",revMsg.device);
 //		fprintf(stderr, "%d\n",revMsg.revBuf[0]);
 //		fprintf(stderr, "hello output\n");
@@ -248,9 +248,9 @@ void lcdOut(DEVICE lcdDev, int fpOut)
 //	close(lcdDev);
 }
 
-void dotOut(DEVICE dotDev, int fpOut, unsigned char fpga_number[2][10])
+void dotOut(DEVICE dotDev, int fpOut)
 {
-	unsigned char retval=write(dotDev.device, fpga_number[revMsg.dot], sizeof(fpga_number[revMsg.dot]));
+	unsigned char retval=write(dotDev.device, revMsg.dot, sizeof(revMsg.dot));
 
 	if(retval<0){
 		printf("Write Error!\n");

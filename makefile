@@ -15,6 +15,9 @@ SRCM2 = countMode.c
 OBJM3 = textEditor.o
 SRCM3 = textEditor.c
 
+OBJM4 = drawBoard.o
+SRCM4 = drawBoard.c
+
 PIPEI =$(EXECDIR)input_pipeLine
 PIPEO =$(EXECDIR)output_pipeLine
 
@@ -28,7 +31,7 @@ CFLAGS = -g -c
 TARGET =$(EXECDIR)20121604
 
 $(TARGET) : $(OBJO)
-	$(CC) -o $(TARGET) $(SRC) $(OBJM) $(OBJM2) $(OBJM3)
+	$(CC) -o $(TARGET) $(SRC) $(OBJM) $(OBJM2) $(OBJM3) $(OBJM4)
 	$(SEND) $(EXECDIR) $(BOPATH)	
 $(OBJO) : $(OBJI)
 	$(CC) -o $(OBJO) $(SRCO)
@@ -40,8 +43,10 @@ $(OBJM) :$(OBJM2)
 	$(CC) -c $(SRCM)
 $(OBJM2) :$(OBJM3)
 	$(CC) -c $(SRCM2)
-$(OBJM3) :
+$(OBJM3) :$(OBJM4)
 	$(CC) -c $(SRCM3)
+$(OBJM4) :
+	$(CC) -c $(SRCM4)
 
 clean : 
 	rm -rf $(TARGET)
@@ -52,3 +57,4 @@ clean :
 	rm -rf $(OBJM)
 	rm -rf $(OBJM2)
 	rm -rf $(OBJM3)
+	rm -rf $(OBJM4)

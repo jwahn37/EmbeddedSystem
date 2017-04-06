@@ -9,8 +9,8 @@ typedef struct{
 	char fnd[4];
 	unsigned char led;
 	char lcd[32];
-	unsigned char dot;
-	char buf[217];
+	unsigned char dot[10];
+	char buf[208];
 }SEND_MSG;
 
 typedef struct {
@@ -24,3 +24,5 @@ typedef struct {
 SEND_MSG clockMode(SEND_MSG sendMsg, REV_MSG revMsg,char* changeFlag, time_t* timeStart);
 SEND_MSG counterMode(SEND_MSG sendMsg, REV_MSG revMsg, char* numbState);
 SEND_MSG textEditor(SEND_MSG sendMsg, REV_MSG revMsg);
+SEND_MSG drawBoard(SEND_MSG sendMsg, REV_MSG revMsg, time_t* timeStart);
+SEND_MSG calculator(SEND_MSG sendMsg, REV_MSG revMsg);
