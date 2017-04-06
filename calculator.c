@@ -2,6 +2,8 @@
 #include<stdlib.h>
 #include<string.h>
 
+#define NUM_BUTTON 9
+
 void inputCalc(REV_MSG revMsg, char (*input)[16]);
 SEND_MSG output(SEND_MSG sendMsg, char input[16]);
 int numOfInput(REV_MSG revMsg);
@@ -46,11 +48,36 @@ int numOfInput(REV_MSG revMsg)
 
 void input(REV_MSG revMsg, char (*input)[16])
 {
+	int idx=0;
+	int jdx=0;
+	int clickedTwo[2];
 	if(numOfInput(revMsg)==1)	//one button clicked
 	{
-		switch(n)
+		//the clicked switch number
+		for(idx=0;idx<NUM_BUTTON;idx++)
+		{
+			if(revMsg.switchB[idx]==1)
+				break;
+		}	
 		
-		(*input)[strlen(*input)]
+		
+		(*input)[strlen(*input)]=idx+'1';
+	}
+	
+	else if(numOfInput(revMsg)==2)	//two button clicked
+	{
+		for(idx=0,jdx=0; idx<NUM_BOTTON;idx++)
+		{
+			if(revMsg.switchB[idx]==1)
+			{
+				clickedTwo[j]++;		
+				j++;
+			}
+		}
+
+			
+
+	}
 
 
 
