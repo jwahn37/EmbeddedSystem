@@ -6,6 +6,7 @@
 #include<sys/stat.h>
 #include<fcntl.h>
 
+
 #define PIPE_READ 0
 #define PIPE_WRITE 1
 
@@ -15,6 +16,7 @@
 #define FND_DEVICE "/dev/fpga_fnd"
 #define LED_DEVICE "/dev/fpga_led"
 #define LCD_DEVICE "/dev/fpga_text_lcd"
+#define DOT_DEVICE "/dev/fpga_dot"
 
 #define LCD_MAXBUF 32
 #define LCD_LINEBUF 16
@@ -28,24 +30,33 @@ typedef struct{
 	char fnd[4];	//size = 4
 	unsigned char led;
 	char lcd[32];
-	char revBuf[218];
+	unsigned char dot;
+	char revBuf[217];
 }REV_MSG;
 
 DEVICE connectToFNDDevice(DEVICE devFnd);
 DEVICE connectToLEDDevice(DEVICE devLed);
 DEVICE connectToLCDDevice(DEVICE devLcd);
+DEVICE connectToDOTDevice(DEVICE devDot);
 
 void fndOut(DEVICE devFnd, int fpOut);
 void ledOut(DEVICE devLed, int fpOut);
 void lcdOut(DEVICE devLcd, int fpOut);
+void dotOut(DEVICE devDot, int fpOut, unsigned char fpga_number[2][10]);
 
 REV_MSG revMsg;
 int main(void)
 {
 	int fpOut;
 	int n, fd[2];
+	//fpga_number[0] means alphabet 'A', fpga_number[1] means number '1'
+	unsigned char fpga_number[2][10] = {
+	{0x1c,0x36,0x63,0x63,0x63,0xff,0xff,0x63,0x63,0x63},
+	{0x0c,0x1c,0x0c,0x0c,0x0c,0x0c,0x0c,0x0c,0x3f,0x3f}
+	};
+
 //	char buf[255];
-	DEVICE fndDev, ledDev, lcdDev;
+	DEVICE fndDev, ledDev, lcdDev, dotDev;
 //	REC_MSG revMsg;
 	if((fpOut=open(PIPE_OUTPUT,O_RDONLY))<0)
 	{
@@ -55,8 +66,9 @@ int main(void)
 //	clockMode(fpOut);
 	fndDev = connectToFNDDevice(fndDev);
 	ledDev = connectToLEDDevice(ledDev);
-	lcdDeb = connectToLCDDevice(lcdDev);
-	hile(1)
+	lcdDev = connectToLCDDevice(lcdDev);
+	dotDev = connectToDOTDevice(dotDev);
+	while(1)
 	{
 		//errer check
 		memset(&(revMsg.fnd[0]),0x00,255);
@@ -67,12 +79,11 @@ int main(void)
 		fndOut(fndDev, fpOut);
 		ledOut(ledDev, fpOut);		
 		lcdOut(lcdDev, fpOut);
+		dotOut(dotDev, fpOut, fpga_number);
 //		fprintf(stderr, "%d",revMsg.device);
 //		fprintf(stderr, "%d\n",revMsg.revBuf[0]);
 //		fprintf(stderr, "hello output\n");
 	}
-
-	
 	
 	return 0;
 }
@@ -110,14 +121,33 @@ DEVICE connectToLCDDevice(DEVICE lcdDev)
 {
 	lcdDev.device = open(LCD_DEVICE, O_WRONLY);
 	memset(lcdDev.devicePath,0x00,255);
-	memcpy(lcdDev.devicePath,LED_DEVICE,18);
+	memcpy(lcdDev.devicePath,LCD_DEVICE,18);
 	
 	if(lcdDev.device<0)
+	{
 		printf("Device open error :  %s\n",LCD_DEVICE);
 		exit(1);
 	}
 
 	return lcdDev;
+}
+
+DEVICE connectToDOTDevice(DEVICE dotDev)
+{
+	dotDev.device = open(DOT_DEVICE, O_WRONLY);
+	memset(dotDev.devicePath,0x00,255);
+	memcpy(dotDev.devicePath,DOT_DEVICE,13);
+
+	if(dotDev.device<0)
+	{	
+		pritnf("Device open error : %s\n",DOT_DEVICE);
+		exit(1);
+	}
+
+
+
+
+	return dotDev;
 }
 
 void fndOut(DEVICE fndDev, int fpOut)
@@ -214,6 +244,25 @@ void lcdOut(DEVICE lcdDev, int fpOut)
 	char string[LCD_MAXBUF];
 	memset(string,0x00,LCD_MAXBUF);
 	memcpy(string,revMsg.lcd,LCD_MAXBUF);
-	write(lcdDev.device, ,LCD_MAXBUF);	
+	write(lcdDev.device,string,LCD_MAXBUF);	
 //	close(lcdDev);
 }
+
+void dotOut(DEVICE dotDev, int fpOut, unsigned char fpga_number[2][10])
+{
+	unsigned char retval=write(dotDev.device, fpga_number[revMsg.dot], sizeof(fpga_number[revMsg.dot]));
+
+	if(retval<0){
+		printf("Write Error!\n");
+	}
+
+}
+
+
+
+
+
+
+
+
+

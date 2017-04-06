@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 	}
 
 	write(dev,string,MAX_BUFF);	
-	
+	printf("\n%c %d zzzzzzzzzzzzzzzzzzzzzzzzzzz\n",string[0],string[0]);	
 	close(dev);
 	
 	return(0);

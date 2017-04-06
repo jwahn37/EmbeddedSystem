@@ -180,8 +180,7 @@ void main_process(int fpIn, int fpOut)
 		//
 ////		mode=mainKey(revMsg,mode);
 //		printf("from now clock mode------------\n");
-		printf("mode : %d read key : %d\n",mode,revMsg.readKey);
-		mode=1;
+		printf("mode : %d read key : %d\n",mode,revMsg.readKey);			mode=2;
 	
 
 		if(pastMode!=mode) //init
@@ -209,6 +208,8 @@ void main_process(int fpIn, int fpOut)
 		if(mode==3){
 			pastMode=mode;
 		}
+
+//		printf("lcd : %s\n",sendMsg.lcd);
 		//...
 			
 //		memset(buf,0x00,255);

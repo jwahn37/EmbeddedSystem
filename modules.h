@@ -9,7 +9,8 @@ typedef struct{
 	char fnd[4];
 	unsigned char led;
 	char lcd[32];
-	char buf[218];
+	unsigned char dot;
+	char buf[217];
 }SEND_MSG;
 
 typedef struct {
