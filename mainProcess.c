@@ -2,8 +2,10 @@
 #include<stdlib.h>
 #include<stdio.h>
 #include<string.h>
+#include<signal.h>
 #include<sys/types.h>
 #include<sys/ipc.h>
+
 //#include<msg.h>
 #include<sys/stat.h>
 #include<fcntl.h>
@@ -30,7 +32,7 @@
 #define VOL_UP 115
 #define VOL_DOWN 114
 
-#define MODE_NUM 1
+#define MODE_NUM 5
 /*
 typedef struct {
 	char device;
@@ -50,8 +52,8 @@ typedef struct{
 }SEND_MSG;
 */
 void makeFIFOPipe();
-void main_process(int fpIn, int fpOut);
-int mainKey(REV_MSG revMsg,int mode);
+void main_process(int fpIn, int fpOut,pid_t pid1, pid_t pid2);
+int mainKey(REV_MSG revMsg,int mode, pid_t pid1, pid_t pid2);
 //void input_process(char* buf,int fpIn);
 //void output_process(char* buf,int fpOut);
 
@@ -60,7 +62,7 @@ SEND_MSG sendMsg;
 int main(void)
 {
 	int fpIn, fpOut;
-	pid_t pid;
+	pid_t pid,pid2;
 	int n, fd[2];
 //	char buf[255];
 	char path[255];
@@ -75,7 +77,7 @@ int main(void)
 			exit(EXIT_FAILURE);
 		}
 
-		else if((pid=fork()))
+		else if((pid2=fork()))
 		{
 			
 			if(pid==-1){
@@ -84,7 +86,7 @@ int main(void)
 			}
 			//main process(child2)
 		//		printf("%s\n",strcat("./",OUTPUT_PROCESS));	
-			main_process(fpIn, fpOut);
+			main_process(fpIn, fpOut,pid,pid2);
 		}
 		else{
 			//output process(parents)
@@ -135,7 +137,7 @@ void makeFIFOPipe()
 
 }
 
-void main_process(int fpIn, int fpOut)
+void main_process(int fpIn, int fpOut, pid_t pid1, pid_t pid2)
 {
 	int n;
 	int i;
@@ -160,28 +162,15 @@ void main_process(int fpIn, int fpOut)
 		exit(EXIT_FAILURE);
 	}
 	printf("main\n");
-
+	mode=0;
 	while(1)
 	{
-//		memset(buf,0x00, 255);
-//		n=read(fpIn,buf,255);
 		
-		//read from input process
 		memset(&(revMsg.device),0x00,255);
 		n=read(fpIn,&(revMsg.device),255);	
 
-	/*	
-		printf("main : ");
-		printf("from %d , ",revMsg.device);
-		for(i=0;i<9;i++)
-			printf("[%d] ",revMsg.switchB[i]);
-		printf("\n");
-*/
-		//
-////		mode=mainKey(revMsg,mode);
-//		printf("from now clock mode------------\n");
-		printf("mode : %d read key : %d\n",mode,revMsg.readKey);			mode=4;
-	
+		mode=mainKey(revMsg,mode,pid1, pid2);
+		printf("mode : %d read key : %d\n",mode,revMsg.readKey);
 
 		if(pastMode!=mode) //init
 		{	printf("button is 9999\n");
@@ -218,16 +207,7 @@ void main_process(int fpIn, int fpOut)
 			sendMsg=calculator(sendMsg, revMsg);
 			pastMode=mode;
 		}
-//		printf("lcd : %s\n",sendMsg.lcd);
-		//...
 			
-//		memset(buf,0x00,255);
-//		output[3]=(output[3]+1)%10;
-//		output[4]=(output[4]+1)%8;
-//		buf[0]=FND_DEV;
-
-		//output to process
-//		memcpy(&(sendMsg.fnd[0]),output,5);
 		write(fpOut,&(sendMsg.fnd[0]),255);
 		usleep(5000);
 	}
@@ -235,12 +215,16 @@ void main_process(int fpIn, int fpOut)
 
 }
 
-int mainKey(REV_MSG revMsg,int mode)
+int mainKey(REV_MSG revMsg,int mode, pid_t pid1, pid_t pid2)
 {
 	//if(revMsg.readKey == HOME)	//
 	if(revMsg.readKey == BACK)	//program exit
 	{
+		kill(pid1, SIGKILL);	
+		kill(pid2, SIGKILL);
 		exit(0); //child process ㅈ종료방법 찾기
+		
+	
 	}
 	if(revMsg.readKey == PROG)
 	{}

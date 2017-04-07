@@ -83,18 +83,21 @@ int main(void)
 	rkDevice = connectToRKDevice(rkDevice);
 	swDevice = connectToSWDevice(swDevice);
 
+
 	//send user's input to the main process continuously
 	while(1){	
 		usleep(1000000);
  	    	memset(&sendMsg,0x00,255);
 		pushSwitch(swDevice,fpIn);
 		readKey(rkDevice,fpIn);
-
+		
 		//send message to main process
 		write(fpIn,&sendMsg,255);
 		sendMsg.device=NO_DV;
 	}
 	//close device driver
+
+	
 	close(swDevice.device);
 	close(rkDevice.device);
 
