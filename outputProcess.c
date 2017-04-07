@@ -21,17 +21,19 @@
 #define LCD_MAXBUF 32
 #define LCD_LINEBUF 16
 
+//device variable
 typedef struct{
 	char device;
 	char devicePath[255];
 }DEVICE;
 
+//recieved message variable from main process
 typedef struct{
 	char fnd[4];	//size = 4
 	unsigned char led;
-	char lcd[32];
+	char lcd[33];
 	unsigned char dot[10];
-	char revBuf[208];
+	char revBuf[207];
 }REV_MSG;
 
 DEVICE connectToFNDDevice(DEVICE devFnd);
@@ -45,6 +47,8 @@ void lcdOut(DEVICE devLcd, int fpOut);
 void dotOut(DEVICE devDot, int fpOut);
 
 REV_MSG revMsg;
+
+//outProcess connect with device drive of board and control device with mainprocess command by named pipe
 int main(void)
 {
 	int fpOut;
@@ -54,39 +58,34 @@ int main(void)
 	{0x1c,0x36,0x63,0x63,0x63,0xff,0xff,0x63,0x63,0x63},
 	{0x0c,0x1c,0x0c,0x0c,0x0c,0x0c,0x0c,0x0c,0x3f,0x3f}
 	};
-
-//	char buf[255];
+	
 	DEVICE fndDev, ledDev, lcdDev, dotDev;
-//	REC_MSG revMsg;
 	if((fpOut=open(PIPE_OUTPUT,O_RDONLY))<0)
 	{
 		perror("open error:");
 		exit(EXIT_FAILURE);
 	}
-//	clockMode(fpOut);
 	fndDev = connectToFNDDevice(fndDev);
 	ledDev = connectToLEDDevice(ledDev);
 	lcdDev = connectToLCDDevice(lcdDev);
 	dotDev = connectToDOTDevice(dotDev);
+	
+	//read from main process and output to device driver
 	while(1)
 	{
-		//errer check
 		memset(&(revMsg.fnd[0]),0x00,255);
-//		printf("empty? %d",revMsg.revBuf[232]);
 		n=read(fpOut,&(revMsg.fnd[0]),255);
-//		memcpy(&(devFnd.device),&revMsg,255); 
 		
 		fndOut(fndDev, fpOut);
 		ledOut(ledDev, fpOut);		
 		lcdOut(lcdDev, fpOut);
 		dotOut(dotDev, fpOut);
-//		fprintf(stderr, "%d",revMsg.device);
-//		fprintf(stderr, "%d\n",revMsg.revBuf[0]);
-//		fprintf(stderr, "hello output\n");
 	}
 	
 	return 0;
 }
+
+//connect to fnd device driver
 DEVICE connectToFNDDevice(DEVICE fndDev)
 {
 	
@@ -101,7 +100,7 @@ DEVICE connectToFNDDevice(DEVICE fndDev)
 	return fndDev;
 }
 
-
+//connect to led device driver
 DEVICE connectToLEDDevice(DEVICE ledDev)
 {
 	
@@ -117,6 +116,7 @@ DEVICE connectToLEDDevice(DEVICE ledDev)
 	return ledDev;
 }
 
+//connect to lcd device driver
 DEVICE connectToLCDDevice(DEVICE lcdDev)
 {
 	lcdDev.device = open(LCD_DEVICE, O_WRONLY);
@@ -132,6 +132,7 @@ DEVICE connectToLCDDevice(DEVICE lcdDev)
 	return lcdDev;
 }
 
+//connect to dot device driver
 DEVICE connectToDOTDevice(DEVICE dotDev)
 {
 	dotDev.device = open(DOT_DEVICE, O_WRONLY);
@@ -143,13 +144,10 @@ DEVICE connectToDOTDevice(DEVICE dotDev)
 		pritnf("Device open error : %s\n",DOT_DEVICE);
 		exit(1);
 	}
-
-
-
-
 	return dotDev;
 }
 
+//print the revMsg from main process to the fnd device driver
 void fndOut(DEVICE fndDev, int fpOut)
 {
 	int dev;
@@ -157,97 +155,46 @@ void fndOut(DEVICE fndDev, int fpOut)
 	unsigned char retval;
 	int i,n;
 	int str_size;
-//	char rec_buf[255];
 
-
-/*
-	dev = open(FND_DEVICE, O_RDWR);
-    	if (dev<0) {
-        	printf("Device open error : %s\n",FND_DEVICE);
-       		exit(1);
-    	}
-*/
-
-
-//	while(1)
-//	{
-//		memset(rec_buf,0x00,255);
-//		n=read(fpOut,fndDev.revBuf,255);
 		
-		memset(data,0,sizeof(data));
-		memcpy(data,revMsg.fnd,4);
-//		printf("%s\n",revMsg.revBuf);
-//		printf("z");
-		printf("z%d %d %d %dz\n",data[0],data[1],data[2],data[3]);
-  //  		printf("z");
-		retval=write(fndDev.device,&data,4);	
-    		if(retval<0) {
-        		printf("Write Error!\n");
-        //		return -1;
-    		}
-
-//		memset(data,0,sizeof(data));
-//	}
+	memset(data,0,sizeof(data));
+	memcpy(data,revMsg.fnd,4);
+	printf("z%d %d %d %dz\n",data[0],data[1],data[2],data[3]);
+	retval=write(fndDev.device,&data,4);	
+    	if(retval<0) {
+        	printf("Write Error!\n");
+    	}
 
 }
 
+//print the revMsg from main process to the led device driver
 void ledOut(DEVICE ledDev, int fpOut)
 {
-//	int dev;
 	unsigned char data;
 	unsigned char retval;
-/*
-	if(argc!=2) {
-		printf("please input the parameter! \n");
-		printf("ex)./test_led a1\n");
-		return -1;
-	}
-*/
-/*	data = atoi(argv[1]);
-	if((data<0)||(data>8))
-	{
-		printf("Invalid range!\n");
-        exit(1);
-    }
-*/
-/*
-\    ledDev.device = open(LED_DEVICE, O_RDWR);
-    if (ledDev.device<0) {
-        printf("Device open error : %s\n",LED_DEVICE);
-        exit(1);
-    }
-*/
-    retval=write(ledDev.device,&revMsg.led,1);	
-    if(retval<0) {
-        printf("Write Error!\n");
-    //    return -1;
+    	
+	retval=write(ledDev.device,&revMsg.led,1);	
+    	if(retval<0) {
+        	printf("Write Error!\n");
     }
 
-//    sleep(1);
-
-    data=0;
-    retval=read(ledDev.device,&data,1);
-    if(retval<0) {
-        printf("Read Error!\n");
-      //  return -1;
-    }
-    printf("Current LED Value : %d\n",data);
-
-    printf("\n");
-
-
-
+    	data=0;
+    	retval=read(ledDev.device,&data,1);
+    	if(retval<0) {
+        	printf("Read Error!\n");
+    	}
 }
 
+//print the revMsg from main process to the lcd device driver
 void lcdOut(DEVICE lcdDev, int fpOut)
 {
 	char string[LCD_MAXBUF];
 	memset(string,0x00,LCD_MAXBUF);
 	memcpy(string,revMsg.lcd,LCD_MAXBUF);
 	write(lcdDev.device,string,LCD_MAXBUF);	
-//	close(lcdDev);
 }
 
+//print the revMsg from main process to the dot device driver
 void dotOut(DEVICE dotDev, int fpOut)
 {
 	unsigned char retval=write(dotDev.device, revMsg.dot, sizeof(revMsg.dot));
@@ -257,12 +204,6 @@ void dotOut(DEVICE dotDev, int fpOut)
 	}
 
 }
-
-
-
-
-
-
 
 
 

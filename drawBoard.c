@@ -12,17 +12,22 @@ SEND_MSG incFnd(SEND_MSG);
 
 int checkEmpty(char curLoc[2], unsigned char board[10]);
 
-
+//drawBoard draw pictures on dot by user's input
+//user can locate the cursor by switch and paint
+//the cursor is twinkled 
+//reversal, reset, clear function
 SEND_MSG drawBoard(SEND_MSG sendMsg, REV_MSG revMsg, time_t* timerS)
 {
-	static unsigned char board[10];
+	static unsigned char board[10]; //current painted board
 	static unsigned char curLoc[2];	//current location curLoc[0] means height of board, curLoc[1] means width of board
 	static unsigned char curFlag=0;
 	static unsigned flashFlag=1;	
-	int i;
 	char initSwitch[4], clickedSwitch[9];
 	time_t timerF;
-	int gap;
+	float gap;
+	int i;	
+	
+
 	//check init
 	memcpy(initSwitch,"9999",4);
 	for(i=0;i<4;i++)	initSwitch[i]-='0';
@@ -34,7 +39,7 @@ SEND_MSG drawBoard(SEND_MSG sendMsg, REV_MSG revMsg, time_t* timerS)
 		curFlag=0;
 
 	}
-
+	
 	if(revMsg.switchB[0]==1)
 		sendMsg=reset(sendMsg, &board, &curLoc, &curFlag);
 	else if(revMsg.switchB[2]==1)	//cursor
@@ -55,8 +60,7 @@ SEND_MSG drawBoard(SEND_MSG sendMsg, REV_MSG revMsg, time_t* timerS)
 	}
 	
 	
-	//flash
-             //   ledClock(sendMsg,timer);
+	//twinkle cursor
         timerF = 0;
         timerF = time(NULL);
         gap=(timerF-*timerS);
@@ -79,12 +83,18 @@ SEND_MSG drawBoard(SEND_MSG sendMsg, REV_MSG revMsg, time_t* timerS)
         	*timerS=timerF;    
         }
             
-
+	if(curFlag==0 && flashFlag==1)
+	{
+		if(checkEmpty(curLoc, sendMsg.dot))
+			sendMsg.dot[curLoc[0]]+=curLoc[1];
+	}
 
 
 	return sendMsg;
 }
 
+//reset the board. 
+//clear the painted board , initialize cursor location and flag
 SEND_MSG reset(SEND_MSG sendMsg, unsigned char (*board)[10], unsigned char (*curLoc)[2], unsigned char* curFlag)
 {
 	sendMsg = clear(sendMsg, board);
@@ -94,12 +104,14 @@ SEND_MSG reset(SEND_MSG sendMsg, unsigned char (*board)[10], unsigned char (*cur
 	return sendMsg;
 }
 
+//decide whether to indicate coursor in dot by flah
 SEND_MSG cursor(SEND_MSG sendMsg, unsigned char* curFlag)
 {
 	*curFlag = (*curFlag == 0) ? 1 : 0;
 	return sendMsg;
 }
 
+//clear the dot
 SEND_MSG clear(SEND_MSG sendMsg, unsigned char (*board)[10])
 {
 	memset(*board,0x00,10);
@@ -107,6 +119,7 @@ SEND_MSG clear(SEND_MSG sendMsg, unsigned char (*board)[10])
 	return sendMsg;		
 }
 
+//reversal the dot with bit operation
 SEND_MSG reversal(SEND_MSG sendMsg, unsigned char (*board)[10])
 {
 	int i;
@@ -116,7 +129,8 @@ SEND_MSG reversal(SEND_MSG sendMsg, unsigned char (*board)[10])
 	return sendMsg;
 }	
 
-
+//change corsor location to match user's input
+//user can paint the board with cursor
 SEND_MSG moveCursor(SEND_MSG sendMsg, REV_MSG revMsg, unsigned char (*board)[10], unsigned char (*curLoc)[2], unsigned char curFlag)
 {
 	char checkCursor;
@@ -148,13 +162,11 @@ SEND_MSG moveCursor(SEND_MSG sendMsg, REV_MSG revMsg, unsigned char (*board)[10]
 	//paint stored board
 	memcpy(sendMsg.dot,*board,10);
 	
-//	if(checkEmpty(*curLoc, sendMsg.dot) && curFlag==0)
-//		sendMsg.dot[(*curLoc)[0]] += (*curLoc)[1];
 
 	return sendMsg;
 }
 
-
+//increase fnd when user input
 SEND_MSG incFnd(SEND_MSG sendMsg)
 {
 	sendMsg.fnd[3]=(sendMsg.fnd[3]+1)%10;
@@ -186,7 +198,6 @@ int checkEmpty(char curLoc[2], unsigned char board[10])
 		checkCursor++;
 	}		
 	
-//	printf("check empty checkCursor : %d %d\n",checkCursor,board[curLoc[0]]>>checkCursor);
 	//locate current cursor if true, the cursor location is empty.
 	if((board[curLoc[0]] >> checkCursor) %2 == 0)
 		return 1;	//empty

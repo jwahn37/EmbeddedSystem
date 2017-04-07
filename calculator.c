@@ -7,42 +7,35 @@
 
 SEND_MSG inputCalc(SEND_MSG sendMsg, REV_MSG revMsg);
 SEND_MSG outputCalc(SEND_MSG sendMsg, REV_MSG revMsg, char input[16], char (*output)[16]);
-//SEND_MGS keepErr(SEND_MSG sendMsg, REV_MSG revMsg, char pastMsg[32]);
 static int numOfInput(REV_MSG revMsg);
 char* changeToStr(float ans);
 int checkErr(char input[16], char oper);
+
+//calculator recieve user's input by switch and print to lcd screen
+//calculator can operate + , - , * , /
+//each role of switch is like below
+// 
+// switch 1~9 : number 1~9
+// switch 1 and 2 : operation '+'
+// switch 2 and 3 : operation '-'
+// switch 4 and 5 : operation '/'
+// switch 6 and 7 : operation '0'
+//switch 7 and 8 : operation '=' execute the arithemetic operation
+
+//if other switch pushed, then ignore the input
+
 SEND_MSG calculator(SEND_MSG sendMsg, REV_MSG revMsg)
 {
 	char init[4];
 	int i;	
 	static char pastMsg[32];
-/*	//init
-	memcpy(init,"9999",4);
-	for(i=0;i<4;i++)	init-='0';
-	if(!memcmp(sendMsg.switchB,init,4))
-	{
-		for(i=0;i<STR_LEN;i++)
-		{
-			input[i]=0;
-			output[i]=0;
-		}
 
-	}
-*/	
 	sendMsg=inputCalc(sendMsg, revMsg);
 	memcpy(pastMsg,sendMsg.lcd,32);
-//	sendMsg=keepErr(sendMsg,revMsg,pastMsg);
 	return sendMsg;
 }
-/*
-SEND_MSG keepErr(sendMsg,revMsg,pastMsg)
-{
-	
 
-
-
-}
-*/
+//number of switch pushed
 static int numOfInput(REV_MSG revMsg)
 {
 	int i;
@@ -55,6 +48,7 @@ static int numOfInput(REV_MSG revMsg)
 	return nOfIp;
 }
 
+//change user's input to variable
 SEND_MSG inputCalc(SEND_MSG sendMsg, REV_MSG revMsg)
 {
 	static char input[16];
@@ -133,6 +127,7 @@ SEND_MSG inputCalc(SEND_MSG sendMsg, REV_MSG revMsg)
 	return sendMsg;
 }
 
+//check whehther user input wrong format
 int checkErr(char input[16], char oper)
 {
 	int i;
@@ -154,9 +149,9 @@ int checkErr(char input[16], char oper)
 		return 0;
 }
 
+//execute arithematic operation with user's input
 SEND_MSG outputCalc(SEND_MSG sendMsg, REV_MSG revMsg, char input[16], char (*output)[16])
 {
-//	static char output[16];
 	int i,j;
 	float ans;
 	float val[2];	//input value
@@ -196,6 +191,7 @@ SEND_MSG outputCalc(SEND_MSG sendMsg, REV_MSG revMsg, char input[16], char (*out
 	return sendMsg;
 }
 
+//change to string
 char* changeToStr(float ans)
 {
 	static char str[16];

@@ -5,8 +5,6 @@
 #include<signal.h>
 #include<sys/types.h>
 #include<sys/ipc.h>
-
-//#include<msg.h>
 #include<sys/stat.h>
 #include<fcntl.h>
 #include<time.h>
@@ -33,43 +31,28 @@
 #define VOL_DOWN 114
 
 #define MODE_NUM 5
-/*
-typedef struct {
-	char device;
-	unsigned char readKey;
-	char switchB[9];
-	char buf[244];
-//	char msgBuf[254];
-}REV_MSG;
-*/
-/*
 
-typedef struct{
-//	char device;
-	char fnd[4];
-	unsigned char led;
-	char buf[250];
-}SEND_MSG;
-*/
 void makeFIFOPipe();
 void main_process(int fpIn, int fpOut,pid_t pid1, pid_t pid2);
 int mainKey(REV_MSG revMsg,int mode, pid_t pid1, pid_t pid2);
-//void input_process(char* buf,int fpIn);
-//void output_process(char* buf,int fpOut);
 
 SEND_MSG sendMsg;
 
+//main process is the major part of this system. 
+//with fork, excl, it makes inputProcess and outputProcess
+//with pipe IPC, it read data from inputProcess and execute algorithm following the modes
+//and write to outputProcess
 int main(void)
 {
 	int fpIn, fpOut;
 	pid_t pid,pid2;
 	int n, fd[2];
-//	char buf[255];
 	char path[255];
 
+	//make pipeline
 	makeFIFOPipe();
-//printf("%s\n",strcat("./",OUTPUT_PROCESS));	
-	//make three process by fork
+
+	//make input process and output process
 	if((pid=fork()))
 	{
 		if(pid==-1){
@@ -85,13 +68,10 @@ int main(void)
 			exit(EXIT_FAILURE);
 			}
 			//main process(child2)
-		//		printf("%s\n",strcat("./",OUTPUT_PROCESS));	
 			main_process(fpIn, fpOut,pid,pid2);
 		}
 		else{
 			//output process(parents)
-			//output_process(buf,fpOut);
-	//	printf("%s\n",strcat("./",OUTPUT_PROCESS));	
 		memset(path,0x00, 255);
 		strcat(path,"./");
 		strcat(path,OUTPUT_PROCESS);
@@ -102,24 +82,23 @@ int main(void)
 	}
 	else{
 		//input process(chlid1)
-		//input_process(buf,fpIn)	;
-	//	printf("%s\n",strcat("./",INPUT_PROCESS));	
 		memset(path,0x00, 255);
 		strcat(path,"./");
 		strcat(path,INPUT_PROCESS);
 		execl(path,INPUT_PROCESS,NULL,(char*) 0);
-		//execl(strcat("./",INPUT_PROCESS),INPUT_PROCESS,NULL,(char*) 0);
 	}
 	return 0;
 }
 
+//make ICP named pipe
+//here, make input_pipeline which is between input process and main process
+//and make output_pipeline which is between output process and main process
 void makeFIFOPipe()
 {
 //make pipe_input
 	if( access(PIPE_INPUT, F_OK)==-1)	//file exist check
 	{
 		if(mkfifo(PIPE_INPUT, S_IRUSR|S_IWUSR)!=0)
-//	if(mknod(PIPE_INPUT,S_IFIFO,0))
 		{
 			perror("mkfifo fauilure : ");
 		}
@@ -129,7 +108,6 @@ void makeFIFOPipe()
 	if( access(PIPE_OUTPUT, F_OK)==-1) //file exist check
 	{
 		if(mkfifo(PIPE_OUTPUT, S_IRUSR|S_IWUSR)!=0)
-//	if(mknod(PIPE_OUTPUT, S_IFIFO,0))	
 		{
 			perror("mkfifo fauilure : ");
 		}
@@ -137,6 +115,9 @@ void makeFIFOPipe()
 
 }
 
+//main process 
+//from the readkey, it receive user's request and execute modules
+//executing modules, it send data to output process
 void main_process(int fpIn, int fpOut, pid_t pid1, pid_t pid2)
 {
 	int n;
@@ -148,8 +129,8 @@ void main_process(int fpIn, int fpOut, pid_t pid1, pid_t pid2)
 	char clockChFlag=0;
 	time_t timeS,timeS2;	
 	char numbState = DECIMAL_NUMB;
-//	time_t ledTime=0;
 
+	//open the pipe
 	if((fpIn=open(PIPE_INPUT,O_RDONLY))<0)
 	{
 		perror("open error:");
@@ -161,18 +142,19 @@ void main_process(int fpIn, int fpOut, pid_t pid1, pid_t pid2)
 		perror("open error:");
 		exit(EXIT_FAILURE);
 	}
-	printf("main\n");
 	mode=0;
 	while(1)
 	{
-		
+		//read pipe from inputProcess	
 		memset(&(revMsg.device),0x00,255);
 		n=read(fpIn,&(revMsg.device),255);	
 
+		//call mainkey
 		mode=mainKey(revMsg,mode,pid1, pid2);
 		printf("mode : %d read key : %d\n",mode,revMsg.readKey);
-
-		if(pastMode!=mode) //init
+	
+		//init mode
+		if(pastMode!=mode) 
 		{	printf("button is 9999\n");
 			revMsg.switchB[0]=9;	
 			revMsg.switchB[1]=9;	
@@ -184,25 +166,33 @@ void main_process(int fpIn, int fpOut, pid_t pid1, pid_t pid2)
 			memset(sendMsg.dot,0x00,10);	
 		}
 
+		//clock mode
 		if(mode==0){
 			if(clockChFlag==0)
 				timeS=time(NULL);
 			sendMsg=clockMode(sendMsg,revMsg,&clockChFlag,&timeS);
 			pastMode=mode;
 		}
+
+		//counter mode
 		if(mode==1){
 			sendMsg=counterMode(sendMsg,revMsg,&numbState);
 			pastMode=mode;
 		}
+
+		//text editor
 		if(mode==2){
 			sendMsg=textEditor(sendMsg, revMsg);
 			pastMode=mode;
 		}
+
+		//draw board
 		if(mode==3){
 			timeS2=time(NULL);
 			sendMsg=drawBoard(sendMsg, revMsg,&timeS);
 			pastMode=mode;
 		}
+		//calculator
 		if(mode==4){
 			sendMsg=calculator(sendMsg, revMsg);
 			pastMode=mode;
@@ -215,19 +205,18 @@ void main_process(int fpIn, int fpOut, pid_t pid1, pid_t pid2)
 
 }
 
+//mainKey execute the command from user's mainkey device input
+//BACK : exit program
+//VOL + , VOL - : change mode
 int mainKey(REV_MSG revMsg,int mode, pid_t pid1, pid_t pid2)
 {
-	//if(revMsg.readKey == HOME)	//
 	if(revMsg.readKey == BACK)	//program exit
 	{
+		
 		kill(pid1, SIGKILL);	
 		kill(pid2, SIGKILL);
-		exit(0); //child process ㅈ종료방법 찾기
-		
-	
+		exit(0); 
 	}
-	if(revMsg.readKey == PROG)
-	{}
 	if(revMsg.readKey == VOL_UP) //change mode +
 	{
 		mode = (mode+1) % MODE_NUM;

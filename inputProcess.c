@@ -65,39 +65,51 @@ SEND_MSG sendMsg;
 unsigned char quit = 0;
 int fpIn;
 
+// input process conncect the device driver of board 
+// and transmit user's input to main process by named pipe
+
 int main(void)
 {
 	
 	pid_t pid;
 	int n, fd[2];
 	DEVICE rkDevice, swDevice;	
-
+	char comp[9];
+	char past[9];
+	unsigned char pastR;
+	pastR=0;
+	memset(comp,0x00,9);
+	memset(past,0x00,9);
 	//open pipe with write mode
     	if((fpIn=open(PIPE_INPUT,O_WRONLY))<0)
 	{
 		perror("open error:");
 		exit(EXIT_FAILURE);
 	}
-
+	
 	//connect to device driver
 	rkDevice = connectToRKDevice(rkDevice);
 	swDevice = connectToSWDevice(swDevice);
-
+	
 
 	//send user's input to the main process continuously
 	while(1){	
-		usleep(1000000);
+		usleep(100000);
  	    	memset(&sendMsg,0x00,255);
 		pushSwitch(swDevice,fpIn);
 		readKey(rkDevice,fpIn);
+	
+		//don't permit long clicked button
+		if((!memcmp(past,comp,9)) && pastR==0)
+		{
+			write(fpIn,&sendMsg,255);
+		}	
 		
-		//send message to main process
-		write(fpIn,&sendMsg,255);
-		sendMsg.device=NO_DV;
+		memcpy(past,sendMsg.switchB,9);
+		pastR=sendMsg.readKey;
+		
 	}
 	//close device driver
-
-	
 	close(swDevice.device);
 	close(rkDevice.device);
 
@@ -108,10 +120,8 @@ int main(void)
 DEVICE connectToRKDevice(DEVICE rkDevice)
 {
 	int i;
-//	char* a="hello";
 	memset(rkDevice.devicePath,0x00,255);
 	memcpy(rkDevice.devicePath,"/dev/input/event0",18);
-//	printf("%s path \n ",rkDevice.devicePath);
 	
 	if((rkDevice.device = open (rkDevice.devicePath, O_RDONLY|O_NONBLOCK)) == -1) {
 		printf ("%s is not a vaild device.n", rkDevice.devicePath);
@@ -120,22 +130,19 @@ DEVICE connectToRKDevice(DEVICE rkDevice)
 
 }
 
-//control user's readkey input
+//Read user's input to read key device driver and store in variable sendMsg
+//by sendMsg, the input go to the main process
 void readKey(DEVICE rkDevice, int fpIn)
 {
 
 	struct input_event ev[RK_BUF];
 	int fd, rd, value, size = sizeof (struct input_event);
 	char name[256] = "Unknown";
-
-	printf("readkey() %d rkDevicepath:%s \n",size,rkDevice.devicePath);
 	
 	//read readkey device
 	if ((rd = read (rkDevice.device, ev, size * RK_BUF)) < size)
 	{
-		printf("read()"); 
 		ev[0].value = KEY_RELEASE; 
-		//	return (0);     
 	}
 
 	value = ev[0].value;
@@ -143,14 +150,7 @@ void readKey(DEVICE rkDevice, int fpIn)
 	if (value != ' ' && ev[1].value == 1 && ev[1].type == 1){ // Only read the key press event
 		printf ("code%d\n", (ev[1].code));
 	}
-	if( value == KEY_RELEASE ) {
-		printf ("key release\n");
-	} else 	if( value == KEY_PRESS ) {
-		printf ("key press\n");
-	
-		//ev[0].code size : 2byte
-		printf ("Type[%d] Value[%d] Code[%d], size:%d\n", ev[0].type, ev[0].value, (ev[0].code), sizeof(ev[0].code));
-	
+	if( value == KEY_PRESS ) {
 		//copy the user's input to sendMsg	
 		sendMsg.device=RK_DV;
 		memset(&(sendMsg.device),0x00,255);
@@ -168,7 +168,6 @@ void user_signal1(int sig)
 DEVICE connectToSWDevice(DEVICE swDevice)
 {
 	int i;
-//	char* a="hello";
 	//init swDevice
 	memset(swDevice.devicePath,0x00,255);
 	memcpy(swDevice.devicePath,"/dev/fpga_push_switch",22);
@@ -184,15 +183,17 @@ DEVICE connectToSWDevice(DEVICE swDevice)
 	return swDevice;
 
 }
-//read user's input on switch
+//read user's input on switch and store in sendMsg. 
+//by sendMsg, the input goes to the main process
 void pushSwitch(DEVICE swDevice, int fpIn)
 {
 	int i;
 	int buff_size;
-	
+	char switchB[9];
+	static char pastB[9]={0,0,0,0,0,0,0,0,0};
 	unsigned char push_sw_buff[MAX_BUTTON];
 	char chFlag=0;
-
+	struct input_event ev[64];
 	
 	buff_size = sizeof(push_sw_buff);
 	printf("Press <ctrl+c> to quit. \n");
@@ -201,12 +202,13 @@ void pushSwitch(DEVICE swDevice, int fpIn)
 	read(swDevice.device, &push_sw_buff, MAX_BUTTON);
 	sendMsg.device=SW_DV;
 	
+	
+
+
+	//check if the switch clicked continuously
 	//copy the user's input to sendMsg	
 	memcpy(sendMsg.switchB, push_sw_buff, MAX_BUTTON);
-		
-	for(i=0;i<=MAX_BUTTON;i++)
-		printf("[%d] ",sendMsg.switchB[i]);
-	printf("\n");
+	memcpy(pastB,sendMsg.switchB,9);		
 
 }
 
