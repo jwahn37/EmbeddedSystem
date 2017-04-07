@@ -5,7 +5,7 @@
 
 
 typedef struct{
-//	char device;
+	char device;
 	char fnd[4];
 	unsigned char led;
 	char lcd[33];
@@ -18,7 +18,6 @@ typedef struct {
 	unsigned char readKey;
 	char switchB[9];
 	char buf[244];
-//	char msgBuf[254];
 }REV_MSG;
 
 SEND_MSG clockMode(SEND_MSG sendMsg, REV_MSG revMsg,char* changeFlag, time_t* timeStart);
