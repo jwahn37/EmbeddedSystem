@@ -180,7 +180,7 @@ void main_process(int fpIn, int fpOut)
 		//
 ////		mode=mainKey(revMsg,mode);
 //		printf("from now clock mode------------\n");
-		printf("mode : %d read key : %d\n",mode,revMsg.readKey);			mode=3;
+		printf("mode : %d read key : %d\n",mode,revMsg.readKey);			mode=4;
 	
 
 		if(pastMode!=mode) //init
@@ -214,7 +214,10 @@ void main_process(int fpIn, int fpOut)
 			sendMsg=drawBoard(sendMsg, revMsg,&timeS);
 			pastMode=mode;
 		}
-
+		if(mode==4){
+			sendMsg=calculator(sendMsg, revMsg);
+			pastMode=mode;
+		}
 //		printf("lcd : %s\n",sendMsg.lcd);
 		//...
 			
